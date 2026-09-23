@@ -522,6 +522,66 @@
     font-size:14px; color:rgba(255,249,242,.85);
     font-family:"Fraunces", Georgia, serif;
   }
+
+  .lb-tags{padding:0 20px 16px; text-align:center;}
+  .lb-tag-chips{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-bottom:8px;}
+  .lb-tag-chip{
+    display:inline-flex; align-items:center; gap:5px;
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,249,242,.3);
+    color:#fff9f2; font-family:"Work Sans", sans-serif; font-size:12.5px;
+    padding:4px 10px; border-radius:999px;
+  }
+  .lb-tag-chip .x{
+    cursor:pointer; color:#ffab63; font-weight:700; font-size:13px; line-height:1;
+  }
+  .lb-tag-btn{
+    background:rgba(239,144,70,.15); border:1px solid #ef9046; color:#ffab63;
+    font-family:"Work Sans", sans-serif; font-size:12.5px; font-weight:600;
+    padding:6px 14px; border-radius:999px; cursor:pointer;
+  }
+  .lb-tag-btn:hover{background:rgba(239,144,70,.3);}
+  .lb-tag-form{display:inline-flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:center;}
+  .lb-tag-form[hidden]{display:none;}
+  .lb-tag-form input{
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,249,242,.35);
+    color:#fff9f2; font-family:"Work Sans", sans-serif; font-size:13px;
+    padding:6px 10px; border-radius:8px; width:180px; max-width:50vw;
+  }
+  .lb-tag-form button{
+    background:#ef9046; border:none; color:#fff9f2; font-family:"Work Sans", sans-serif;
+    font-size:12.5px; font-weight:600; padding:6px 12px; border-radius:8px; cursor:pointer;
+  }
+  .lb-tag-form button#lb-tag-cancel{background:rgba(255,255,255,.1); color:#fff9f2;}
+  .lb-tag-msg{font-size:11.5px; color:#ffab63; margin-top:4px; font-family:"Work Sans", sans-serif; min-height:14px;}
+  .lb-tag-admin-toggle{
+    display:block; margin:8px auto 0; opacity:.3; font-size:10px;
+    color:#fff9f2; background:none; border:none; cursor:pointer; font-family:"Work Sans", sans-serif;
+  }
+  .lb-tag-admin-toggle:hover{opacity:.7;}
+  .lb-admin-modal{
+    position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9999;
+    display:flex; align-items:center; justify-content:center; padding:16px; box-sizing:border-box;
+  }
+  .lb-admin-modal[hidden]{display:none;}
+  .lb-admin-box{
+    background:#18130d; border:1px solid rgba(255,249,242,.25); border-radius:12px;
+    padding:22px; width:280px; max-width:88vw; text-align:center;
+    font-family:"Work Sans", sans-serif; color:#fff9f2;
+  }
+  .lb-admin-box h4{margin:0 0 12px; font-size:15px; font-weight:600;}
+  .lb-admin-box input{
+    width:100%; box-sizing:border-box; background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,249,242,.35); color:#fff9f2; padding:8px 10px;
+    border-radius:8px; margin-bottom:8px; font-family:"Work Sans", sans-serif; font-size:13px;
+  }
+  .lb-admin-box .row{display:flex; gap:8px; margin-top:10px;}
+  .lb-admin-box button{
+    flex:1; background:#ef9046; border:none; color:#fff9f2; padding:8px; border-radius:8px;
+    cursor:pointer; font-family:"Work Sans", sans-serif; font-weight:600; font-size:13px;
+  }
+  .lb-admin-box button.secondary{background:rgba(255,255,255,.12);}
+  .lb-admin-box p{font-family:"Work Sans", sans-serif;}
+  .lb-admin-box .err{color:#ff9d9d; font-size:12px; margin-top:6px; min-height:14px; font-family:"Work Sans", sans-serif;}
 </style>
 
 </head>
@@ -693,6 +753,39 @@
       <button class="lb-nav lb-next" id="lb-next" type="button" aria-label="Ďalšia fotka">›</button>
     </div>
     <div class="lb-caption"><span class="cat" id="lb-cat"></span><span class="txt" id="lb-text"></span></div>
+    <div class="lb-tags" id="lb-tags">
+      <div class="lb-tag-chips" id="lb-tag-chips"></div>
+      <div class="lb-tag-add">
+        <button type="button" class="lb-tag-btn" id="lb-tag-btn">Označiť niekoho</button>
+        <span class="lb-tag-form" id="lb-tag-form" hidden>
+          <input type="text" id="lb-tag-input" maxlength="40" placeholder="Meno a priezvisko" autocomplete="off">
+          <button type="button" id="lb-tag-submit">Pridať</button>
+          <button type="button" id="lb-tag-cancel">Zrušiť</button>
+        </span>
+      </div>
+      <div class="lb-tag-msg" id="lb-tag-msg"></div>
+      <button type="button" class="lb-tag-admin-toggle" id="lb-tag-admin-toggle">admin</button>
+    </div>
+  <div class="lb-admin-modal" id="lb-admin-modal" hidden>
+  <div class="lb-admin-box">
+    <h4 id="lb-admin-title">Admin prihlásenie</h4>
+    <div id="lb-admin-login-view">
+      <input type="password" id="lb-admin-pass" placeholder="Heslo">
+      <div class="row">
+        <button type="button" id="lb-admin-login-btn">Prihlásiť</button>
+        <button type="button" class="secondary" id="lb-admin-close-btn">Zavrieť</button>
+      </div>
+      <div class="err" id="lb-admin-err"></div>
+    </div>
+    <div id="lb-admin-logged-view" hidden>
+      <p style="font-size:13px;opacity:.8;margin:0 0 12px;">Si prihlásený ako admin. Pri označeniach teraz uvidíš tlačidlo na zmazanie.</p>
+      <div class="row">
+        <button type="button" class="secondary" id="lb-admin-logout-btn">Odhlásiť</button>
+        <button type="button" id="lb-admin-done-btn">Hotovo</button>
+      </div>
+    </div>
+  </div>
+</div>
   </div>
 
   <div class="video-player" id="video-player" hidden>
@@ -1754,6 +1847,254 @@
   }, true);
 })();
 
+
+  // ============ Označovanie ľudí vo fotkách (Firebase Firestore) ============
+  var TAG_FB_CONFIG = {
+    apiKey: "AIzaSyB5A6hzJnjEaXvz7Vhq5K5ri9eJaSai4-E",
+    authDomain: "lednicke-rovne-sklarne.firebaseapp.com",
+    projectId: "lednicke-rovne-sklarne",
+    storageBucket: "lednicke-rovne-sklarne.firebasestorage.app",
+    messagingSenderId: "492062362376",
+    appId: "1:492062362376:web:707d85f18c9c274a6bfabd"
+  };
+  var TAG_ADMIN_EMAIL = "admin@lednicke-rovne-sklarne.app";
+  var tagDb = null, tagAuth = null, tagFs = null, tagAuthMod = null, tagReady = null;
+  var tagsCache = {};
+  var tagAdminLogged = false;
+
+  function tagInit(){
+    if (tagReady) return tagReady;
+    tagReady = Promise.all([
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js')
+    ]).then(function(mods){
+      var appMod = mods[0], fsMod = mods[1], authModRef = mods[2];
+      tagFs = fsMod;
+      tagAuthMod = authModRef;
+      var app = appMod.initializeApp(TAG_FB_CONFIG);
+      tagDb = fsMod.getFirestore(app);
+      tagAuth = authModRef.getAuth(app);
+      authModRef.onAuthStateChanged(tagAuth, function(){ tagUpdateAdminView(); });
+      return tagLoadAll();
+    })["catch"](function(e){ console.error('Tag init zlyhal', e); });
+    return tagReady;
+  }
+
+  function tagLoadAll(){
+    return tagFs.getDocs(tagFs.collection(tagDb, 'tags')).then(function(snap){
+      var cache = {};
+      snap.forEach(function(d){
+        var data = d.data();
+        var pid = data.photoId;
+        if (!pid) return;
+        if (!cache[pid]) cache[pid] = [];
+        cache[pid].push({ id: d.id, name: data.name });
+      });
+      tagsCache = cache;
+      tagRenderChips();
+    })["catch"](function(e){ console.error('Načítanie označení zlyhalo', e); });
+  }
+
+  function tagCurrentPhotoId(){
+    var ph = (typeof currentPhotoList !== 'undefined' && currentPhotoList) ? currentPhotoList[currentPhotoIndex] : null;
+    return ph ? ph.p : null;
+  }
+
+  function tagRenderChips(){
+    var chipsEl = document.getElementById('lb-tag-chips');
+    if (!chipsEl) return;
+    var pid = tagCurrentPhotoId();
+    var list = (pid && tagsCache[pid]) ? tagsCache[pid] : [];
+    chipsEl.innerHTML = '';
+    list.forEach(function(item){
+      var chip = document.createElement('span');
+      chip.className = 'lb-tag-chip';
+      var nameSpan = document.createElement('span');
+      nameSpan.textContent = item.name;
+      chip.appendChild(nameSpan);
+      if (tagAdminLogged){
+        var x = document.createElement('span');
+        x.className = 'x';
+        x.textContent = String.fromCharCode(10005);
+        x.title = 'Zmazať označenie';
+        x.addEventListener('click', function(){ tagDeleteOne(item.id, pid); });
+        chip.appendChild(x);
+      }
+      chipsEl.appendChild(chip);
+    });
+  }
+
+  function tagDeleteOne(id, pid){
+    if (!tagAuth || !tagAuth.currentUser) return;
+    tagFs.deleteDoc(tagFs.doc(tagDb, 'tags', id)).then(function(){
+      if (pid && tagsCache[pid]) {
+        tagsCache[pid] = tagsCache[pid].filter(function(it){ return it.id !== id; });
+      }
+      tagRenderChips();
+    })["catch"](function(e){ alert('Zmazanie sa nepodarilo: ' + (e && e.message ? e.message : e)); });
+  }
+
+  var TAG_BAD_WORDS = ["kokot","kurva","piča","zmrd","debil","idiot","hovado","srac","jebem","fuck","shit"];
+  function tagLooksSpammy(name){
+    var n = name.toLowerCase();
+    for (var i=0;i<TAG_BAD_WORDS.length;i++){
+      if (n.indexOf(TAG_BAD_WORDS[i]) !== -1) return true;
+    }
+    if (/^https?:\/\//i.test(name)) return true;
+    if (/(.)\1{4,}/.test(name)) return true;
+    return false;
+  }
+
+  var tagLastSubmit = 0;
+  function tagSubmit(name){
+    var msgEl = document.getElementById('lb-tag-msg');
+    name = (name || '').trim().replace(/\s+/g,' ');
+    if (name.length < 1){ if (msgEl) msgEl.textContent = 'Zadaj meno.'; return; }
+    if (name.length > 40){ name = name.slice(0,40); }
+    if (tagLooksSpammy(name)){ if (msgEl) msgEl.textContent = 'Toto meno nie je možné pridať.'; return; }
+    var now = Date.now();
+    if (now - tagLastSubmit < 4000){ if (msgEl) msgEl.textContent = 'Počkaj chvíľu a skús znova.'; return; }
+    var pid = tagCurrentPhotoId();
+    if (!pid){ return; }
+    tagLastSubmit = now;
+    if (msgEl) msgEl.textContent = 'Ukladám…';
+    tagInit().then(function(){
+      return tagFs.addDoc(tagFs.collection(tagDb, 'tags'), {
+        photoId: pid,
+        name: name,
+        ts: tagFs.serverTimestamp()
+      });
+    }).then(function(ref){
+      if (!tagsCache[pid]) tagsCache[pid] = [];
+      tagsCache[pid].push({ id: ref.id, name: name });
+      tagRenderChips();
+      if (msgEl) msgEl.textContent = '';
+      var formEl = document.getElementById('lb-tag-form');
+      var inputEl = document.getElementById('lb-tag-input');
+      var btnEl = document.getElementById('lb-tag-btn');
+      if (formEl) formEl.hidden = true;
+      if (btnEl) btnEl.hidden = false;
+      if (inputEl) inputEl.value = '';
+    })["catch"](function(e){
+      if (msgEl) msgEl.textContent = 'Nepodarilo sa uložiť, skús to znova.';
+      console.error(e);
+    });
+  }
+
+  function tagWireUI(){
+    var btn = document.getElementById('lb-tag-btn');
+    var formEl = document.getElementById('lb-tag-form');
+    var inputEl = document.getElementById('lb-tag-input');
+    var submitBtn = document.getElementById('lb-tag-submit');
+    var cancelBtn = document.getElementById('lb-tag-cancel');
+    var adminToggle = document.getElementById('lb-tag-admin-toggle');
+    if (btn) btn.addEventListener('click', function(){
+      tagInit();
+      formEl.hidden = false;
+      btn.hidden = true;
+      if (inputEl) inputEl.focus();
+    });
+    if (cancelBtn) cancelBtn.addEventListener('click', function(){
+      formEl.hidden = true;
+      btn.hidden = false;
+      var m = document.getElementById('lb-tag-msg');
+      if (m) m.textContent = '';
+    });
+    if (submitBtn) submitBtn.addEventListener('click', function(){ tagSubmit(inputEl ? inputEl.value : ''); });
+    if (inputEl) inputEl.addEventListener('keydown', function(e){
+      if (e.key === 'Enter'){ e.preventDefault(); tagSubmit(inputEl.value); }
+    });
+    if (adminToggle) adminToggle.addEventListener('click', function(){ tagOpenAdminModal(); });
+  }
+
+  function tagOpenAdminModal(){
+    tagInit().then(function(){
+      var modal = document.getElementById('lb-admin-modal');
+      if (!modal) return;
+      modal.hidden = false;
+      tagUpdateAdminView();
+    });
+  }
+  function tagUpdateAdminView(){
+    var loginView = document.getElementById('lb-admin-login-view');
+    var loggedView = document.getElementById('lb-admin-logged-view');
+    var logged = !!(tagAuth && tagAuth.currentUser);
+    tagAdminLogged = logged;
+    if (loginView) loginView.hidden = logged;
+    if (loggedView) loggedView.hidden = !logged;
+    tagRenderChips();
+  }
+  function tagWireAdminModal(){
+    var closeBtn = document.getElementById('lb-admin-close-btn');
+    var doneBtn = document.getElementById('lb-admin-done-btn');
+    var loginBtn = document.getElementById('lb-admin-login-btn');
+    var logoutBtn = document.getElementById('lb-admin-logout-btn');
+    var passInput = document.getElementById('lb-admin-pass');
+    var errEl = document.getElementById('lb-admin-err');
+    var modal = document.getElementById('lb-admin-modal');
+    function closeModal(){ if (modal) modal.hidden = true; }
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (doneBtn) doneBtn.addEventListener('click', closeModal);
+    if (loginBtn) loginBtn.addEventListener('click', function(){
+      if (errEl) errEl.textContent = '';
+      var pass = passInput ? passInput.value : '';
+      if (!pass){ if (errEl) errEl.textContent = 'Zadaj heslo.'; return; }
+      tagInit().then(function(){
+        return tagAuthMod.signInWithEmailAndPassword(tagAuth, TAG_ADMIN_EMAIL, pass);
+      }).then(function(){
+        if (passInput) passInput.value = '';
+        tagUpdateAdminView();
+      })["catch"](function(e){
+        if (errEl) errEl.textContent = 'Nesprávne heslo.';
+      });
+    });
+    if (logoutBtn) logoutBtn.addEventListener('click', function(){
+      tagAuthMod.signOut(tagAuth).then(function(){ tagUpdateAdminView(); });
+    });
+    if (passInput) passInput.addEventListener('keydown', function(e){
+      if (e.key === 'Enter'){ e.preventDefault(); loginBtn.click(); }
+    });
+  }
+
+  var __origShowLightboxPhotoForTags = showLightboxPhoto;
+  showLightboxPhoto = function(){
+    __origShowLightboxPhotoForTags();
+    var btn = document.getElementById('lb-tag-btn');
+    var formEl = document.getElementById('lb-tag-form');
+    var msgEl = document.getElementById('lb-tag-msg');
+    if (btn) btn.hidden = false;
+    if (formEl) formEl.hidden = true;
+    if (msgEl) msgEl.textContent = '';
+    tagRenderChips();
+  };
+
+  function tagQueryMatches(ph, query){
+    if (!query) return false;
+    var pid = ph && ph.p;
+    if (!pid) return false;
+    var list = tagsCache[pid];
+    if (!list || !list.length) return false;
+    var q = query.toLowerCase();
+    for (var i=0;i<list.length;i++){
+      if (list[i].name.toLowerCase().indexOf(q) !== -1) return true;
+    }
+    return false;
+  }
+  var __origFotoMatchesQueryForTags = fotoMatchesQuery;
+  fotoMatchesQuery = function(ph, query){
+    if (__origFotoMatchesQueryForTags(ph, query)) return true;
+    return tagQueryMatches(ph, query);
+  };
+  var __origSklMatchesQueryForTags = sklMatchesQuery;
+  sklMatchesQuery = function(ph, query){
+    if (__origSklMatchesQueryForTags(ph, query)) return true;
+    return tagQueryMatches(ph, query);
+  };
+
+  tagWireUI();
+  tagWireAdminModal();
+  tagInit();
 })();
 </script>
 
