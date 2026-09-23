@@ -612,6 +612,30 @@
   .lb-admin-box button.secondary{background:rgba(255,255,255,.12);}
   .lb-admin-box p{font-family:"Work Sans", sans-serif;}
   .lb-admin-box .err{color:#ff9d9d; font-size:12px; margin-top:6px; min-height:14px; font-family:"Work Sans", sans-serif;}
+
+  .photo-lightbox .lb-caption .txt.lb-cap-chip{
+    display:inline-block; background:rgba(239,144,70,.15); border:1px solid #ef9046;
+    color:#ffe8d6; padding:4px 12px; border-radius:999px; font-size:13px;
+  }
+  .photo-lightbox .lb-caption .txt.lb-cap-chip[hidden]{display:none;}
+  .lb-cap-edit{
+    display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px;
+    margin-left:6px; background:transparent; border:1px solid rgba(255,249,242,.3); border-radius:50%;
+    color:#ffab63; font-size:11px; cursor:pointer; vertical-align:middle; padding:0;
+  }
+  .lb-cap-edit[hidden]{display:none;}
+  .lb-cap-form{ display:inline-flex; gap:6px; align-items:center; margin-top:8px; flex-wrap:wrap; justify-content:center; }
+  .lb-cap-form[hidden]{display:none;}
+  .lb-cap-form input{
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,249,242,.25); border-radius:999px;
+    padding:5px 12px; color:#fff9f2; font-size:13px; font-family:"Work Sans", sans-serif; min-width:160px;
+  }
+  .lb-cap-form button{
+    border-radius:999px; padding:5px 12px; font-size:12.5px; font-family:"Work Sans", sans-serif;
+    font-weight:600; cursor:pointer; border:1px solid #ef9046;
+  }
+  .lb-cap-form .lb-cap-save{ background:#ef9046; color:#18130d; }
+  .lb-cap-form .lb-cap-cancel{ background:transparent; color:#ffab63; }
 </style>
 
 </head>
@@ -782,7 +806,7 @@
       <img id="lb-img" src="" alt=""><div class="lb-pins" id="lb-pins"></div>
       <button class="lb-nav lb-next" id="lb-next" type="button" aria-label="Ďalšia fotka">›</button>
     </div>
-    <div class="lb-caption"><span class="cat" id="lb-cat"></span><span class="txt" id="lb-text"></span></div>
+    <div class="lb-caption"><span class="cat" id="lb-cat"></span><span class="txt" id="lb-text"></span><button type="button" class="lb-cap-edit" id="lb-cap-edit" hidden>&#9998;</button><span class="lb-cap-form" id="lb-cap-form" hidden><input type="text" id="lb-cap-input" maxlength="100"><button type="button" class="lb-cap-save" id="lb-cap-save">Uložiť</button><button type="button" class="lb-cap-cancel" id="lb-cap-cancel">Zrušiť</button></span></div>
     <div class="lb-tags" id="lb-tags">
       <div class="lb-tag-chips" id="lb-tag-chips"></div>
       <div class="lb-tag-add">
@@ -2270,6 +2294,116 @@
   tagWireUI();
   tagWireAdminModal();
   tagInit();
+  // ============ Editovateľný popisok fotky (admin, zobrazený ako značka) ============
+  var capCache = {};
+  var capReady = null;
+
+  function capDocId(photoId){
+    return encodeURIComponent(photoId);
+  }
+
+  function capInit(){
+    if (capReady) return capReady;
+    capReady = tagInit().then(function(){
+      return tagFs.getDocs(tagFs.collection(tagDb, 'captions'));
+    }).then(function(snap){
+      snap.forEach(function(d){
+        var pid;
+        try { pid = decodeURIComponent(d.id); } catch (e) { pid = null; }
+        if (!pid) return;
+        var data = d.data() || {};
+        capCache[pid] = (typeof data.text === 'string') ? data.text : '';
+      });
+    })['catch'](function(){});
+    return capReady;
+  }
+
+  function capCurrentPhoto(){
+    return currentPhotoList[currentPhotoIndex];
+  }
+
+  function capCurrentText(ph){
+    var pid = ph.p;
+    var override = capCache.hasOwnProperty(pid) ? capCache[pid] : null;
+    return (override !== null && override !== undefined && override !== '') ? override : (ph.c || '');
+  }
+
+  function capRender(){
+    var ph = capCurrentPhoto();
+    if (!ph) return;
+    var capForm = document.getElementById('lb-cap-form');
+    var capEditBtn = document.getElementById('lb-cap-edit');
+    if (capForm) capForm.hidden = true;
+    if (lbText) {
+      lbText.hidden = false;
+      lbText.textContent = capCurrentText(ph);
+      lbText.classList.add('lb-cap-chip');
+    }
+    if (capEditBtn) capEditBtn.hidden = !tagAdminLogged;
+  }
+
+  function capStartEdit(){
+    var ph = capCurrentPhoto();
+    if (!ph) return;
+    var capForm = document.getElementById('lb-cap-form');
+    var capInput = document.getElementById('lb-cap-input');
+    var capEditBtn = document.getElementById('lb-cap-edit');
+    if (!capForm || !capInput) return;
+    capInput.value = capCurrentText(ph);
+    if (lbText) lbText.hidden = true;
+    if (capEditBtn) capEditBtn.hidden = true;
+    capForm.hidden = false;
+    capInput.focus();
+    capInput.select();
+  }
+
+  function capCancelEdit(){
+    capRender();
+  }
+
+  function capSaveEdit(){
+    var ph = capCurrentPhoto();
+    if (!ph) return;
+    if (!tagAdminLogged) { capCancelEdit(); return; }
+    var capInput = document.getElementById('lb-cap-input');
+    if (!capInput) return;
+    var text = (capInput.value || '').trim();
+    if (!text) return;
+    if (text.length > 100) text = text.slice(0, 100);
+    var pid = ph.p;
+    capInit().then(function(){
+      var ref = tagFs.doc(tagDb, 'captions', capDocId(pid));
+      return tagFs.setDoc(ref, { text: text, updatedAt: tagFs.serverTimestamp() });
+    }).then(function(){
+      capCache[pid] = text;
+      capRender();
+    })['catch'](function(){
+      alert('Nepodarilo sa uložiť popisok, skús to prosím znova.');
+    });
+  }
+
+  function capWire(){
+    var capEditBtn = document.getElementById('lb-cap-edit');
+    var capSaveBtn = document.getElementById('lb-cap-save');
+    var capCancelBtn = document.getElementById('lb-cap-cancel');
+    var capInput = document.getElementById('lb-cap-input');
+    if (capEditBtn) capEditBtn.addEventListener('click', function(){ capInit().then(capStartEdit); });
+    if (capSaveBtn) capSaveBtn.addEventListener('click', capSaveEdit);
+    if (capCancelBtn) capCancelBtn.addEventListener('click', capCancelEdit);
+    if (capInput) capInput.addEventListener('keydown', function(e){
+      if (e.key === 'Enter') { e.preventDefault(); capSaveEdit(); }
+      if (e.key === 'Escape') { e.preventDefault(); capCancelEdit(); }
+    });
+  }
+
+  var __origTagRenderChipsForCaption = tagRenderChips;
+  tagRenderChips = function(){
+    __origTagRenderChipsForCaption();
+    capInit().then(capRender);
+  };
+
+  capWire();
+
 })();
 </script>
 
