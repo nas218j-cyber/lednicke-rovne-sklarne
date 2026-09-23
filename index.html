@@ -153,8 +153,10 @@
     overflow-x:auto;
     padding-bottom:4px;
     scrollbar-width:none;
+    cursor:grab;
   }
   .chips::-webkit-scrollbar{display:none;}
+  .chips.dragging{cursor:grabbing; user-select:none;}
   .chip{
     flex:none;
     font-family:"JetBrains Mono", ui-monospace, monospace;
@@ -1716,6 +1718,41 @@
   globalQEl.addEventListener("input", function(){
     setGlobalSearchActive(!!globalQEl.value.trim());
   });
+
+// Mysou tahatelne posuvanie kategorii (chips) na PC
+(function(){
+  function enableDragScroll(el){
+    if(!el || el.__dragScrollInit) return;
+    el.__dragScrollInit = true;
+    var isDown = false, startX = 0, scrollLeft = 0, moved = false;
+    el.addEventListener('mousedown', function(e){
+      isDown = true; moved = false;
+      el.classList.add('dragging');
+      startX = e.pageX - el.offsetLeft;
+      scrollLeft = el.scrollLeft;
+    });
+    window.addEventListener('mouseup', function(){
+      if(!isDown) return;
+      isDown = false;
+      el.classList.remove('dragging');
+    });
+    el.addEventListener('mouseleave', function(){
+      if(isDown){ isDown = false; el.classList.remove('dragging'); }
+    });
+    el.addEventListener('mousemove', function(e){
+      if(!isDown) return;
+      e.preventDefault();
+      var x = e.pageX - el.offsetLeft;
+      var walk = x - startX;
+      if(Math.abs(walk) > 5) moved = true;
+      el.scrollLeft = scrollLeft - walk;
+    });
+    el.addEventListener('click', function(e){
+      if(moved){ e.preventDefault(); e.stopPropagation(); moved = false; }
+    }, true);
+  }
+  document.querySelectorAll('.chips').forEach(enableDragScroll);
+})();
 
 })();
 </script>
