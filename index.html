@@ -523,6 +523,7 @@
     font-family:"Fraunces", Georgia, serif;
   }
 
+  
   .lb-tags{padding:0 20px 16px; text-align:center;}
   .lb-tag-chips{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-bottom:8px;}
   .lb-tag-chip{
@@ -531,6 +532,7 @@
     color:#fff9f2; font-family:"Work Sans", sans-serif; font-size:12.5px;
     padding:4px 10px; border-radius:999px;
   }
+  .lb-tag-chip.has-pin{ cursor:pointer; }
   .lb-tag-chip .x{
     cursor:pointer; color:#ffab63; font-weight:700; font-size:13px; line-height:1;
   }
@@ -552,12 +554,38 @@
     font-size:12.5px; font-weight:600; padding:6px 12px; border-radius:8px; cursor:pointer;
   }
   .lb-tag-form button#lb-tag-cancel{background:rgba(255,255,255,.1); color:#fff9f2;}
+  .lb-tag-hint{
+    display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
+    font-size:12px; color:#ffab63; font-family:"Work Sans", sans-serif;
+  }
+  .lb-tag-hint[hidden]{display:none;}
+  .lb-tag-hint button{
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,249,242,.3); color:#fff9f2;
+    font-family:"Work Sans", sans-serif; font-size:11.5px; padding:4px 10px; border-radius:999px; cursor:pointer;
+  }
   .lb-tag-msg{font-size:11.5px; color:#ffab63; margin-top:4px; font-family:"Work Sans", sans-serif; min-height:14px;}
   .lb-tag-admin-toggle{
     display:block; margin:8px auto 0; opacity:.3; font-size:10px;
     color:#fff9f2; background:none; border:none; cursor:pointer; font-family:"Work Sans", sans-serif;
   }
   .lb-tag-admin-toggle:hover{opacity:.7;}
+  .lb-pins{ position:absolute; pointer-events:none; transform-origin:center center; will-change:transform; }
+  .lb-pins.placing{ pointer-events:auto; cursor:crosshair; }
+  .lb-pin{ position:absolute; transform:translate(-50%,-50%); pointer-events:auto; }
+  .lb-pin-dot{
+    width:20px; height:20px; border-radius:50%; display:block;
+    background:rgba(239,144,70,.85); border:2px solid #fff9f2;
+    box-shadow:0 1px 5px rgba(0,0,0,.55); cursor:pointer;
+  }
+  .lb-pin.new .lb-pin-dot{ background:rgba(255,171,99,1); box-shadow:0 0 0 5px rgba(255,171,99,.35); }
+  .lb-pin-label{
+    position:absolute; bottom:calc(100% + 7px); left:50%; transform:translateX(-50%);
+    background:#18130d; color:#fff9f2; padding:3px 9px; border-radius:6px;
+    font-size:11.5px; font-family:"Work Sans", sans-serif; white-space:nowrap;
+    border:1px solid rgba(255,249,242,.25); pointer-events:none;
+    opacity:0; transition:opacity .15s ease;
+  }
+  .lb-pin:hover .lb-pin-label, .lb-pin.active .lb-pin-label{ opacity:1; }
   .lb-admin-modal{
     position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9999;
     display:flex; align-items:center; justify-content:center; padding:16px; box-sizing:border-box;
@@ -749,7 +777,7 @@
     <div class="lb-top"><div class="lb-tools"><button class="lb-tool" id="lb-zoom-out" type="button" aria-label="Oddialiť">−</button><button class="lb-tool" id="lb-zoom-in" type="button" aria-label="Priblížiť">+</button><button class="lb-tool" id="lb-share" type="button" aria-label="Zdieľať / uložiť fotku"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button><button class="lb-tool" id="lb-fullscreen" type="button" aria-label="Celá obrazovka" aria-pressed="false">⛶</button></div><button class="lb-close" id="lb-close" type="button" aria-label="Zavrieť">✕</button></div>
     <div class="lb-body">
       <button class="lb-nav lb-prev" id="lb-prev" type="button" aria-label="Predchádzajúca fotka">‹</button>
-      <img id="lb-img" src="" alt="">
+      <img id="lb-img" src="" alt=""><div class="lb-pins" id="lb-pins"></div>
       <button class="lb-nav lb-next" id="lb-next" type="button" aria-label="Ďalšia fotka">›</button>
     </div>
     <div class="lb-caption"><span class="cat" id="lb-cat"></span><span class="txt" id="lb-text"></span></div>
@@ -757,6 +785,10 @@
       <div class="lb-tag-chips" id="lb-tag-chips"></div>
       <div class="lb-tag-add">
         <button type="button" class="lb-tag-btn" id="lb-tag-btn">Označiť niekoho</button>
+        <div class="lb-tag-hint" id="lb-tag-hint" hidden>
+          <span>Klikni na osobu na fotke</span>
+          <button type="button" id="lb-tag-hint-cancel">Zrušiť</button>
+        </div>
         <span class="lb-tag-form" id="lb-tag-form" hidden>
           <input type="text" id="lb-tag-input" maxlength="40" placeholder="Meno a priezvisko" autocomplete="off">
           <button type="button" id="lb-tag-submit">Pridať</button>
@@ -1848,6 +1880,7 @@
 })();
 
 
+  
   // ============ Označovanie ľudí vo fotkách (Firebase Firestore) ============
   var TAG_FB_CONFIG = {
     apiKey: "AIzaSyB5A6hzJnjEaXvz7Vhq5K5ri9eJaSai4-E",
@@ -1861,6 +1894,7 @@
   var tagDb = null, tagAuth = null, tagFs = null, tagAuthMod = null, tagReady = null;
   var tagsCache = {};
   var tagAdminLogged = false;
+  var tagPlacingPos = null;
 
   function tagInit(){
     if (tagReady) return tagReady;
@@ -1889,16 +1923,23 @@
         var pid = data.photoId;
         if (!pid) return;
         if (!cache[pid]) cache[pid] = [];
-        cache[pid].push({ id: d.id, name: data.name });
+        var item = { id: d.id, name: data.name };
+        if (typeof data.x === 'number' && typeof data.y === 'number') { item.x = data.x; item.y = data.y; }
+        cache[pid].push(item);
       });
       tagsCache = cache;
-      tagRenderChips();
+      tagRenderAll();
     })["catch"](function(e){ console.error('Načítanie označení zlyhalo', e); });
   }
 
   function tagCurrentPhotoId(){
     var ph = (typeof currentPhotoList !== 'undefined' && currentPhotoList) ? currentPhotoList[currentPhotoIndex] : null;
     return ph ? ph.p : null;
+  }
+
+  function tagRenderAll(){
+    tagRenderChips();
+    tagRenderPins();
   }
 
   function tagRenderChips(){
@@ -1913,16 +1954,82 @@
       var nameSpan = document.createElement('span');
       nameSpan.textContent = item.name;
       chip.appendChild(nameSpan);
+      if (typeof item.x === 'number'){
+        chip.classList.add('has-pin');
+        chip.title = 'Ukázať na fotke';
+        chip.addEventListener('click', function(){ tagHighlightPin(item.id); });
+      }
       if (tagAdminLogged){
         var x = document.createElement('span');
         x.className = 'x';
         x.textContent = String.fromCharCode(10005);
         x.title = 'Zmazať označenie';
-        x.addEventListener('click', function(){ tagDeleteOne(item.id, pid); });
+        x.addEventListener('click', function(ev){ ev.stopPropagation(); tagDeleteOne(item.id, pid); });
         chip.appendChild(x);
       }
       chipsEl.appendChild(chip);
     });
+  }
+
+  function tagHighlightPin(tagId){
+    var pins = document.getElementById('lb-pins');
+    if (!pins) return;
+    var pin = pins.querySelector('[data-tag-id="' + tagId + '"]');
+    if (!pin) return;
+    pin.classList.add('active');
+    setTimeout(function(){ pin.classList.remove('active'); }, 2200);
+  }
+
+  function tagRenderPins(){
+    var pins = document.getElementById('lb-pins');
+    if (!pins) return;
+    var wasPlacing = pins.classList.contains('placing');
+    var pid = tagCurrentPhotoId();
+    var list = (pid && tagsCache[pid]) ? tagsCache[pid] : [];
+    pins.innerHTML = '';
+    pins.className = 'lb-pins' + (wasPlacing ? ' placing' : '');
+    list.forEach(function(item){
+      if (typeof item.x !== 'number' || typeof item.y !== 'number') return;
+      var pin = document.createElement('div');
+      pin.className = 'lb-pin';
+      pin.style.left = (item.x * 100) + '%';
+      pin.style.top = (item.y * 100) + '%';
+      pin.setAttribute('data-tag-id', item.id);
+      var dot = document.createElement('span');
+      dot.className = 'lb-pin-dot';
+      var label = document.createElement('span');
+      label.className = 'lb-pin-label';
+      label.textContent = item.name;
+      pin.appendChild(dot);
+      pin.appendChild(label);
+      pin.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        pin.classList.toggle('active');
+      });
+      pins.appendChild(pin);
+    });
+    tagSyncPinsGeometry();
+  }
+
+  function tagSyncPinsGeometry(){
+    var pins = document.getElementById('lb-pins');
+    var img = document.getElementById('lb-img');
+    if (!pins || !img) return;
+    var body = img.closest ? img.closest('.lb-body') : null;
+    if (!body) return;
+    var prevTransition = img.style.transition;
+    var prevTransform = img.style.transform;
+    img.style.transition = 'none';
+    img.style.transform = 'none';
+    var imgRect = img.getBoundingClientRect();
+    var bodyRect = body.getBoundingClientRect();
+    img.style.transform = prevTransform;
+    img.style.transition = prevTransition;
+    if (!imgRect.width || !imgRect.height) return;
+    pins.style.left = (imgRect.left - bodyRect.left) + 'px';
+    pins.style.top = (imgRect.top - bodyRect.top) + 'px';
+    pins.style.width = imgRect.width + 'px';
+    pins.style.height = imgRect.height + 'px';
   }
 
   function tagDeleteOne(id, pid){
@@ -1931,7 +2038,7 @@
       if (pid && tagsCache[pid]) {
         tagsCache[pid] = tagsCache[pid].filter(function(it){ return it.id !== id; });
       }
-      tagRenderChips();
+      tagRenderAll();
     })["catch"](function(e){ alert('Zmazanie sa nepodarilo: ' + (e && e.message ? e.message : e)); });
   }
 
@@ -1946,6 +2053,65 @@
     return false;
   }
 
+  function tagEnterPlacing(){
+    tagInit();
+    var pins = document.getElementById('lb-pins');
+    var btn = document.getElementById('lb-tag-btn');
+    var hint = document.getElementById('lb-tag-hint');
+    if (typeof lbResetZoom === 'function') lbResetZoom();
+    tagSyncPinsGeometry();
+    if (pins) pins.classList.add('placing');
+    if (btn) btn.hidden = true;
+    if (hint) hint.hidden = false;
+  }
+
+  function tagExitPlacing(){
+    tagPlacingPos = null;
+    var pins = document.getElementById('lb-pins');
+    var btn = document.getElementById('lb-tag-btn');
+    var hint = document.getElementById('lb-tag-hint');
+    var formEl = document.getElementById('lb-tag-form');
+    var msgEl = document.getElementById('lb-tag-msg');
+    var tmp = document.getElementById('lb-pin-tmp');
+    if (tmp) tmp.remove();
+    if (pins) pins.classList.remove('placing');
+    if (btn) btn.hidden = false;
+    if (hint) hint.hidden = true;
+    if (formEl) formEl.hidden = true;
+    if (msgEl) msgEl.textContent = '';
+  }
+
+  function tagOnPinsClick(ev){
+    var pins = document.getElementById('lb-pins');
+    if (!pins || !pins.classList.contains('placing')) return;
+    if (ev.target.closest && ev.target.closest('.lb-pin')) return;
+    var rect = pins.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    var rx = (ev.clientX - rect.left) / rect.width;
+    var ry = (ev.clientY - rect.top) / rect.height;
+    rx = Math.max(0, Math.min(1, rx));
+    ry = Math.max(0, Math.min(1, ry));
+    tagPlacingPos = { x: rx, y: ry };
+    var tmp = document.getElementById('lb-pin-tmp');
+    if (!tmp) {
+      tmp = document.createElement('div');
+      tmp.id = 'lb-pin-tmp';
+      tmp.className = 'lb-pin new';
+      var dot = document.createElement('span');
+      dot.className = 'lb-pin-dot';
+      tmp.appendChild(dot);
+      pins.appendChild(tmp);
+    }
+    tmp.style.left = (rx * 100) + '%';
+    tmp.style.top = (ry * 100) + '%';
+    var hint = document.getElementById('lb-tag-hint');
+    var formEl = document.getElementById('lb-tag-form');
+    var inputEl = document.getElementById('lb-tag-input');
+    if (hint) hint.hidden = true;
+    if (formEl) formEl.hidden = false;
+    if (inputEl) inputEl.focus();
+  }
+
   var tagLastSubmit = 0;
   function tagSubmit(name){
     var msgEl = document.getElementById('lb-tag-msg');
@@ -1953,29 +2119,28 @@
     if (name.length < 1){ if (msgEl) msgEl.textContent = 'Zadaj meno.'; return; }
     if (name.length > 40){ name = name.slice(0,40); }
     if (tagLooksSpammy(name)){ if (msgEl) msgEl.textContent = 'Toto meno nie je možné pridať.'; return; }
+    if (!tagPlacingPos){ if (msgEl) msgEl.textContent = 'Najprv klikni na osobu na fotke.'; return; }
     var now = Date.now();
     if (now - tagLastSubmit < 4000){ if (msgEl) msgEl.textContent = 'Počkaj chvíľu a skús znova.'; return; }
     var pid = tagCurrentPhotoId();
     if (!pid){ return; }
+    var pos = tagPlacingPos;
     tagLastSubmit = now;
     if (msgEl) msgEl.textContent = 'Ukladám…';
     tagInit().then(function(){
       return tagFs.addDoc(tagFs.collection(tagDb, 'tags'), {
         photoId: pid,
         name: name,
-        ts: tagFs.serverTimestamp()
+        ts: tagFs.serverTimestamp(),
+        x: pos.x,
+        y: pos.y
       });
     }).then(function(ref){
       if (!tagsCache[pid]) tagsCache[pid] = [];
-      tagsCache[pid].push({ id: ref.id, name: name });
-      tagRenderChips();
+      tagsCache[pid].push({ id: ref.id, name: name, x: pos.x, y: pos.y });
+      tagRenderAll();
       if (msgEl) msgEl.textContent = '';
-      var formEl = document.getElementById('lb-tag-form');
-      var inputEl = document.getElementById('lb-tag-input');
-      var btnEl = document.getElementById('lb-tag-btn');
-      if (formEl) formEl.hidden = true;
-      if (btnEl) btnEl.hidden = false;
-      if (inputEl) inputEl.value = '';
+      tagExitPlacing();
     })["catch"](function(e){
       if (msgEl) msgEl.textContent = 'Nepodarilo sa uložiť, skús to znova.';
       console.error(e);
@@ -1988,24 +2153,18 @@
     var inputEl = document.getElementById('lb-tag-input');
     var submitBtn = document.getElementById('lb-tag-submit');
     var cancelBtn = document.getElementById('lb-tag-cancel');
+    var hintCancelBtn = document.getElementById('lb-tag-hint-cancel');
     var adminToggle = document.getElementById('lb-tag-admin-toggle');
-    if (btn) btn.addEventListener('click', function(){
-      tagInit();
-      formEl.hidden = false;
-      btn.hidden = true;
-      if (inputEl) inputEl.focus();
-    });
-    if (cancelBtn) cancelBtn.addEventListener('click', function(){
-      formEl.hidden = true;
-      btn.hidden = false;
-      var m = document.getElementById('lb-tag-msg');
-      if (m) m.textContent = '';
-    });
+    var pins = document.getElementById('lb-pins');
+    if (btn) btn.addEventListener('click', function(){ tagEnterPlacing(); });
+    if (cancelBtn) cancelBtn.addEventListener('click', function(){ tagExitPlacing(); });
+    if (hintCancelBtn) hintCancelBtn.addEventListener('click', function(){ tagExitPlacing(); });
     if (submitBtn) submitBtn.addEventListener('click', function(){ tagSubmit(inputEl ? inputEl.value : ''); });
     if (inputEl) inputEl.addEventListener('keydown', function(e){
       if (e.key === 'Enter'){ e.preventDefault(); tagSubmit(inputEl.value); }
     });
     if (adminToggle) adminToggle.addEventListener('click', function(){ tagOpenAdminModal(); });
+    if (pins) pins.addEventListener('click', tagOnPinsClick);
   }
 
   function tagOpenAdminModal(){
@@ -2060,14 +2219,28 @@
   var __origShowLightboxPhotoForTags = showLightboxPhoto;
   showLightboxPhoto = function(){
     __origShowLightboxPhotoForTags();
-    var btn = document.getElementById('lb-tag-btn');
-    var formEl = document.getElementById('lb-tag-form');
-    var msgEl = document.getElementById('lb-tag-msg');
-    if (btn) btn.hidden = false;
-    if (formEl) formEl.hidden = true;
-    if (msgEl) msgEl.textContent = '';
-    tagRenderChips();
+    tagExitPlacing();
+    tagRenderAll();
   };
+
+  var __origLbApplyTransformForTags = (typeof lbApplyTransform === 'function') ? lbApplyTransform : null;
+  if (__origLbApplyTransformForTags){
+    lbApplyTransform = function(withTransition){
+      __origLbApplyTransformForTags(withTransition);
+      var pins = document.getElementById('lb-pins');
+      if (pins && typeof lbImg !== 'undefined' && lbImg) {
+        pins.style.transition = lbImg.style.transition;
+        pins.style.transform = lbImg.style.transform;
+      }
+    };
+  }
+
+  window.addEventListener('resize', function(){ tagSyncPinsGeometry(); });
+  document.addEventListener('fullscreenchange', function(){ tagSyncPinsGeometry(); });
+  (function(){
+    var img = document.getElementById('lb-img');
+    if (img) img.addEventListener('load', function(){ tagSyncPinsGeometry(); });
+  })();
 
   function tagQueryMatches(ph, query){
     if (!query) return false;
