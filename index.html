@@ -576,8 +576,9 @@
     width:20px; height:20px; border-radius:50%; display:block;
     background:rgba(239,144,70,.85); border:2px solid #fff9f2;
     box-shadow:0 1px 5px rgba(0,0,0,.55); cursor:pointer;
+    opacity:0; transition:opacity .2s ease;
   }
-  .lb-pin.new .lb-pin-dot{ background:rgba(255,171,99,1); box-shadow:0 0 0 5px rgba(255,171,99,.35); }
+  .lb-pin.new .lb-pin-dot{ background:rgba(255,171,99,1); box-shadow:0 0 0 5px rgba(255,171,99,.35); opacity:1; }
   .lb-pin-label{
     position:absolute; bottom:calc(100% + 7px); left:50%; transform:translateX(-50%);
     background:#18130d; color:#fff9f2; padding:3px 9px; border-radius:6px;
@@ -586,6 +587,7 @@
     opacity:0; transition:opacity .15s ease;
   }
   .lb-pin:hover .lb-pin-label, .lb-pin.active .lb-pin-label{ opacity:1; }
+  .lb-pin:hover .lb-pin-dot, .lb-pin.active .lb-pin-dot{ opacity:1; }
   .lb-admin-modal{
     position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9999;
     display:flex; align-items:center; justify-content:center; padding:16px; box-sizing:border-box;
