@@ -1,4 +1,4 @@
-const CACHE = "sklo-lr-v1";
+const CACHE = "sklo-lr-v2";
 const PHOTO_CACHE = "sklo-lr-photos-v1";
 const PHOTO_CACHE_MAX = 400; // strop na počet uložených fotiek (thumb + plná verzia)
 const ASSETS = ["./", "./index.html", "./manifest.json"];
@@ -56,16 +56,16 @@ self.addEventListener("fetch", (event) => {
 
   if (url.origin !== self.location.origin) return; // never intercept YouTube/external links
 
+  // Vlastné súbory appky (index.html a pod.): najprv skús sieť, nech používateľ
+  // vždy vidí najnovší obsah, keď je online. Cache slúži len ako záloha pre
+  // offline režim alebo keď sieť zlyhá (napr. slabé pripojenie).
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const network = fetch(event.request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE).then((cache) => cache.put(event.request, copy));
-          return response;
-        })
-        .catch(() => cached);
-      return cached || network;
-    })
+    fetch(event.request)
+      .then((response) => {
+        const copy = response.clone();
+        caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
