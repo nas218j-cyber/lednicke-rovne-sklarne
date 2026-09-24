@@ -1,4 +1,4 @@
-const CACHE = "sklo-lr-v2";
+const CACHE = "sklo-lr-v3";
 const PHOTO_CACHE = "sklo-lr-photos-v1";
 const PHOTO_CACHE_MAX = 400; // strop na počet uložených fotiek (thumb + plná verzia)
 const ASSETS = ["./", "./index.html", "./manifest.json"];
@@ -6,7 +6,9 @@ const ASSETS = ["./", "./index.html", "./manifest.json"];
 self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(ASSETS)).catch(() => {})
+    caches.open(CACHE).then((cache) =>
+      Promise.all(ASSETS.map((a) => fetch(a, { cache: "reload" }).then((r) => cache.put(a, r))))
+    ).catch(() => {})
   );
 });
 
@@ -56,11 +58,13 @@ self.addEventListener("fetch", (event) => {
 
   if (url.origin !== self.location.origin) return; // never intercept YouTube/external links
 
-  // Vlastné súbory appky (index.html a pod.): najprv skús sieť, nech používateľ
-  // vždy vidí najnovší obsah, keď je online. Cache slúži len ako záloha pre
-  // offline režim alebo keď sieť zlyhá (napr. slabé pripojenie).
+  // Vlastné súbory appky (index.html a pod.): najprv skús sieť a to skutočne
+  // vždy najnovšiu verziu (cache: "reload" obchádza aj bežnú HTTP cache
+  // prehliadača, nielen Cache Storage service workera) — nech používateľ vždy
+  // vidí najnovší obsah, keď je online. Cache slúži len ako záloha pre offline
+  // režim alebo keď sieť/požiadavka zlyhá (napr. slabé pripojenie).
   event.respondWith(
-    fetch(event.request)
+    fetch(event.request, { cache: "reload" })
       .then((response) => {
         const copy = response.clone();
         caches.open(CACHE).then((cache) => cache.put(event.request, copy));
