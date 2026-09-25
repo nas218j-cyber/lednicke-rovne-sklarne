@@ -2555,7 +2555,7 @@
     if (errEl) errEl.textContent = '';
     subSelectedFile = null;
     if (!file) return;
-    if (!/^image//.test(file.type)){
+    if (!/^image\//.test(file.type)){
       if (errEl) errEl.textContent = 'Vyber prosím obrázok (fotku).';
       return;
     }
@@ -2581,7 +2581,7 @@
     if (!subSelectedFile){ if (errEl) errEl.textContent = 'Najprv vyber fotku.'; return; }
     var now = Date.now();
     if (now - subLastSubmit < 20000){ if (errEl) errEl.textContent = 'Počkaj chvíľu a skús znova.'; return; }
-    var note = (noteEl ? noteEl.value : '').trim().replace(/s+/g,' ');
+    var note = (noteEl ? noteEl.value : '').trim().replace(/\s+/g,' ');
     if (note.length > 200) note = note.slice(0,200);
     if (note && tagLooksSpammy(note)){ if (errEl) errEl.textContent = 'Túto poznámku nie je možné odoslať.'; return; }
     var gallery = gallerySel ? gallerySel.value : 'lr';
