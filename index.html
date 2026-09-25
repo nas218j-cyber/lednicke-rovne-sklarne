@@ -674,6 +674,50 @@
   }
   .sub-review-approve{background:#ef9046; color:#18130d;}
   .sub-review-reject{background:transparent; color:#ffab63;}
+  
+  .addphotobtn{
+    flex:none; display:flex; align-items:center; justify-content:center;
+    width:44px; height:44px; background:var(--surface); border:1px solid var(--border);
+    border-radius:12px; box-shadow:var(--shadow); color:var(--accent-strong); cursor:pointer;
+    font-family:"Work Sans", sans-serif; font-size:12.5px; gap:4px;
+  }
+  .addphotobtn:hover{background:var(--surface-2);}
+  .addphotobtn[hidden]{display:none;}
+  #sub-review-btn{width:auto; padding:0 12px;}
+  .sub-badge{
+    display:inline-block; min-width:16px; height:16px; padding:0 4px; ma
+
+      <button type="button" class="addphotobtn" id="sub-open-btn" title="Pridať starú fotku">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      </button>
+      <button type="button" class="addphotobtn" id="sub-review-btn" title="Návrhy fotiek na schválenie" hidden>📥<span class="sub-badge" id="sub-review-count"></span></button>
+rgin-left:2px;
+    background:var(--accent); color:#fff9f2; border-radius:999px; font-size:10px;
+    line-height:16px; text-align:center; font-family:"Work Sans", sans-serif; vertical-align:middle;
+  }
+  .sub-badge:empty{display:none;}
+  .lb-admin-box select, .lb-admin-box textarea{
+    width:100%; box-sizing:border-box; background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,249,242,.35); color:#fff9f2; padding:8px 10px;
+    border-radius:8px; margin-bottom:8px; font-family:"Work Sans", sans-serif; font-size:13px;
+  }
+  .lb-admin-box textarea{resize:vertical; min-height:54px;}
+  .sub-preview-thumb{width:100%; max-height:170px; object-fit:cover; border-radius:8px; margin-bottom:8px; display:none;}
+  .sub-preview-thumb.show{display:block;}
+  .sub-review-list{max-height:50vh; overflow-y:auto; margin-bottom:10px;}
+  .sub-review-item{display:flex; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,249,242,.15); text-align:left;}
+  .sub-review-item:last-child{border-bottom:none;}
+  .sub-review-thumb{width:72px; height:72px; object-fit:cover; border-radius:8px; flex:none; background:rgba(255,255,255,.08);}
+  .sub-review-info{flex:1; min-width:0;}
+  .sub-review-note{font-size:12.5px; color:#e9d9c4; margin:0 0 6px; word-wrap:break-word;}
+  .sub-review-info select{margin-bottom:6px; font-size:12px; padding:5px 8px;}
+  .sub-review-actions{display:flex; gap:6px;}
+  .sub-review-actions button{
+    flex:1; border-radius:7px; padding:6px; font-size:12px; font-family:"Work Sans", sans-serif;
+    font-weight:600; cursor:pointer; border:1px solid #ef9046;
+  }
+  .sub-review-approve{background:#ef9046; color:#18130d;}
+  .sub-review-reject{background:transparent; color:#ffab63;}
   </style>
 
 </head>
@@ -891,6 +935,40 @@
 </div>
   </div>
 
+  
+  <div class="lb-admin-modal" id="sub-modal" hidden>
+    <div class="lb-admin-box" style="width:320px;">
+      <h4>Pridať starú fotku</h4>
+      <div id="sub-form-view">
+        <input type="file" id="sub-file" accept="image/*">
+        <img id="sub-preview" class="sub-preview-thumb" alt="">
+        <select id="sub-gallery">
+          <option value="lr">Foto LR</option>
+          <option value="skl">Foto skláreň</option>
+        </select>
+        <select id="sub-cat"></select>
+        <textarea id="sub-note" maxlength="200" placeholder="Poznámka k fotke (voliteľné) – napr. čo alebo kedy je na fotke"></textarea>
+        <p class="err" id="sub-err"></p>
+        <div class="row">
+          <button type="button" class="secondary" id="sub-cancel-btn">Zrušiť</button>
+          <button type="button" id="sub-send-btn">Odoslať</button>
+        </div>
+      </div>
+      <div id="sub-done-view" hidden>
+        <p style="font-size:13px;opacity:.85;margin:0 0 12px;">Ďakujeme! Fotka čaká na schválenie a čoskoro sa objaví na stránke.</p>
+        <div class="row"><button type="button" id="sub-close-btn">Zavrieť</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lb-admin-modal" id="sub-review-modal" hidden>
+    <div class="lb-admin-box" style="width:360px;">
+      <h4>Návrhy fotiek na schválenie</h4>
+      <div class="sub-review-list" id="sub-review-list"></div>
+      <p style="font-size:13px;opacity:.7;" id="sub-review-empty" hidden>Žiadne čakajúce návrhy.</p>
+      <div class="row"><button type="button" class="secondary" id="sub-review-close-btn">Zavrieť</button></div>
+    </div>
+  </div>
   
   <div class="lb-admin-modal" id="sub-modal" hidden>
     <div class="lb-admin-box" style="width:320px;">
@@ -2500,6 +2578,276 @@
   };
 
   capWire();
+
+  // ============ Pridanie vlastnej starej fotky (verejné, čaká na schválenie adminom) ============
+  var SUB_UPLOAD_PRESET = "submissions_unsigned";
+  var subSelectedFile = null;
+  var subLastSubmit = 0;
+
+  function subPopulateCats(){
+    var gallerySel = document.getElementById('sub-gallery');
+    var catSel = document.getElementById('sub-cat');
+    if (!gallerySel || !catSel) return;
+    var cats = gallerySel.value === 'skl' ? SKL_CATS : PHOTO_CATS;
+    var opts = '<option value="">Neviem / nech vyberie admin</option>';
+    cats.forEach(function(c){
+      if (c.id === 'vsetky') return;
+      opts += '<option value="' + c.id + '">' + c.label + '</option>';
+    });
+    catSel.innerHTML = opts;
+  }
+
+  function subOpenModal(){
+    var modal = document.getElementById('sub-modal');
+    if (!modal) return;
+    subResetForm();
+    modal.hidden = false;
+  }
+  function subCloseModal(){
+    var modal = document.getElementById('sub-modal');
+    if (modal) modal.hidden = true;
+  }
+  function subResetForm(){
+    subSelectedFile = null;
+    var fileEl = document.getElementById('sub-file');
+    var prevEl = document.getElementById('sub-preview');
+    var noteEl = document.getElementById('sub-note');
+    var errEl = document.getElementById('sub-err');
+    var sendBtn = document.getElementById('sub-send-btn');
+    var formView = document.getElementById('sub-form-view');
+    var doneView = document.getElementById('sub-done-view');
+    if (fileEl) fileEl.value = '';
+    if (prevEl){ prevEl.src = ''; prevEl.classList.remove('show'); }
+    if (noteEl) noteEl.value = '';
+    if (errEl) errEl.textContent = '';
+    if (sendBtn){ sendBtn.disabled = false; sendBtn.textContent = 'Odoslať'; }
+    if (formView) formView.hidden = false;
+    if (doneView) doneView.hidden = true;
+    subPopulateCats();
+  }
+
+  function subOnFileChange(e){
+    var errEl = document.getElementById('sub-err');
+    var prevEl = document.getElementById('sub-preview');
+    var file = e.target.files && e.target.files[0];
+    if (errEl) errEl.textContent = '';
+    subSelectedFile = null;
+    if (!file) return;
+    if (!/^image//.test(file.type)){
+      if (errEl) errEl.textContent = 'Vyber prosím obrázok (fotku).';
+      return;
+    }
+    if (file.size > 15 * 1024 * 1024){
+      if (errEl) errEl.textContent = 'Fotka je príliš veľká (max 15 MB).';
+      return;
+    }
+    subSelectedFile = file;
+    if (prevEl){
+      var reader = new FileReader();
+      reader.onload = function(ev){ prevEl.src = ev.target.result; prevEl.classList.add('show'); };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function subSend(){
+    var errEl = document.getElementById('sub-err');
+    var sendBtn = document.getElementById('sub-send-btn');
+    var noteEl = document.getElementById('sub-note');
+    var gallerySel = document.getElementById('sub-gallery');
+    var catSel = document.getElementById('sub-cat');
+    if (errEl) errEl.textContent = '';
+    if (!subSelectedFile){ if (errEl) errEl.textContent = 'Najprv vyber fotku.'; return; }
+    var now = Date.now();
+    if (now - subLastSubmit < 20000){ if (errEl) errEl.textContent = 'Počkaj chvíľu a skús znova.'; return; }
+    var note = (noteEl ? noteEl.value : '').trim().replace(/s+/g,' ');
+    if (note.length > 200) note = note.slice(0,200);
+    if (note && tagLooksSpammy(note)){ if (errEl) errEl.textContent = 'Túto poznámku nie je možné odoslať.'; return; }
+    var gallery = gallerySel ? gallerySel.value : 'lr';
+    var cat = catSel ? catSel.value : '';
+    subLastSubmit = now;
+    if (sendBtn){ sendBtn.disabled = true; sendBtn.textContent = 'Nahrávam…'; }
+
+    var fd = new FormData();
+    fd.append('file', subSelectedFile);
+    fd.append('upload_preset', SUB_UPLOAD_PRESET);
+    fetch('https://api.cloudinary.com/v1_1/' + PHOTO_CLOUD + '/image/upload', { method: 'POST', body: fd })
+      .then(function(r){ if (!r.ok) throw new Error('upload zlyhal'); return r.json(); })
+      .then(function(data){
+        var photoId = data.public_id;
+        return tagInit().then(function(){
+          return tagFs.addDoc(tagFs.collection(tagDb, 'submissions'), {
+            photoId: photoId,
+            note: note,
+            gallery: gallery,
+            cat: cat,
+            status: 'pending',
+            createdAt: tagFs.serverTimestamp()
+          });
+        });
+      })
+      .then(function(){
+        var formView = document.getElementById('sub-form-view');
+        var doneView = document.getElementById('sub-done-view');
+        if (formView) formView.hidden = true;
+        if (doneView) doneView.hidden = false;
+      })
+      ["catch"](function(e){
+        console.error('Odoslanie fotky zlyhalo', e);
+        if (errEl) errEl.textContent = 'Nepodarilo sa odoslať fotku, skús to prosím znova.';
+        if (sendBtn){ sendBtn.disabled = false; sendBtn.textContent = 'Odoslať'; }
+      });
+  }
+
+  function subWireForm(){
+    var openBtn = document.getElementById('sub-open-btn');
+    var cancelBtn = document.getElementById('sub-cancel-btn');
+    var closeBtn = document.getElementById('sub-close-btn');
+    var sendBtn = document.getElementById('sub-send-btn');
+    var fileEl = document.getElementById('sub-file');
+    var gallerySel = document.getElementById('sub-gallery');
+    if (openBtn) openBtn.addEventListener('click', subOpenModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', subCloseModal);
+    if (closeBtn) closeBtn.addEventListener('click', subCloseModal);
+    if (sendBtn) sendBtn.addEventListener('click', subSend);
+    if (fileEl) fileEl.addEventListener('change', subOnFileChange);
+    if (gallerySel) gallerySel.addEventListener('change', subPopulateCats);
+  }
+
+  // ---- Admin: prehľad a schvaľovanie návrhov fotiek ----
+  function subRenderReviewItem(docSnap){
+    var d = docSnap.data();
+    var wrap = document.createElement('div');
+    wrap.className = 'sub-review-item';
+
+    var img = document.createElement('img');
+    img.className = 'sub-review-thumb';
+    img.src = photoThumb(d.photoId);
+    img.alt = '';
+    wrap.appendChild(img);
+
+    var info = document.createElement('div');
+    info.className = 'sub-review-info';
+
+    var noteP = document.createElement('p');
+    noteP.className = 'sub-review-note';
+    noteP.textContent = d.note ? d.note : '(bez poznámky)';
+    info.appendChild(noteP);
+
+    var gallerySel = document.createElement('select');
+    ['lr','skl'].forEach(function(g){
+      var o = document.createElement('option');
+      o.value = g; o.textContent = g === 'skl' ? 'Foto skláreň' : 'Foto LR';
+      if (g === d.gallery) o.selected = true;
+      gallerySel.appendChild(o);
+    });
+    info.appendChild(gallerySel);
+
+    var catSel = document.createElement('select');
+    function fillCats(){
+      var list = gallerySel.value === 'skl' ? SKL_CATS : PHOTO_CATS;
+      catSel.innerHTML = '';
+      list.forEach(function(c){
+        if (c.id === 'vsetky') return;
+        var o = document.createElement('option');
+        o.value = c.id; o.textContent = c.label;
+        if (c.id === d.cat) o.selected = true;
+        catSel.appendChild(o);
+      });
+    }
+    fillCats();
+    gallerySel.addEventListener('change', fillCats);
+    info.appendChild(catSel);
+
+    var actions = document.createElement('div');
+    actions.className = 'sub-review-actions';
+    var approveBtn = document.createElement('button');
+    approveBtn.type = 'button'; approveBtn.className = 'sub-review-approve'; approveBtn.textContent = 'Schváliť';
+    approveBtn.addEventListener('click', function(){
+      approveBtn.disabled = true;
+      tagFs.updateDoc(tagFs.doc(tagDb, 'submissions', docSnap.id), {
+        status: 'approved', gallery: gallerySel.value, cat: catSel.value
+      }).then(function(){ wrap.remove(); subUpdateEmptyState(); })
+      ["catch"](function(e){ approveBtn.disabled = false; alert('Nepodarilo sa schváliť: ' + (e && e.message ? e.message : e)); });
+    });
+    var rejectBtn = document.createElement('button');
+    rejectBtn.type = 'button'; rejectBtn.className = 'sub-review-reject'; rejectBtn.textContent = 'Zamietnuť';
+    rejectBtn.addEventListener('click', function(){
+      rejectBtn.disabled = true;
+      tagFs.deleteDoc(tagFs.doc(tagDb, 'submissions', docSnap.id)).then(function(){ wrap.remove(); subUpdateEmptyState(); })
+      ["catch"](function(e){ rejectBtn.disabled = false; alert('Nepodarilo sa zamietnuť: ' + (e && e.message ? e.message : e)); });
+    });
+    actions.appendChild(approveBtn);
+    actions.appendChild(rejectBtn);
+    info.appendChild(actions);
+
+    wrap.appendChild(info);
+    return wrap;
+  }
+
+  function subUpdateEmptyState(){
+    var list = document.getElementById('sub-review-list');
+    var empty = document.getElementById('sub-review-empty');
+    if (!list || !empty) return;
+    empty.hidden = list.children.length > 0;
+  }
+
+  function subOpenReview(){
+    var modal = document.getElementById('sub-review-modal');
+    var list = document.getElementById('sub-review-list');
+    if (!modal || !list) return;
+    modal.hidden = false;
+    list.innerHTML = '<p style="font-size:13px;opacity:.7;">Načítavam…</p>';
+    tagInit().then(function(){
+      var q = tagFs.query(tagFs.collection(tagDb, 'submissions'), tagFs.where('status', '==', 'pending'));
+      return tagFs.getDocs(q);
+    }).then(function(snap){
+      list.innerHTML = '';
+      snap.forEach(function(docSnap){ list.appendChild(subRenderReviewItem(docSnap)); });
+      subUpdateEmptyState();
+    })["catch"](function(e){
+      list.innerHTML = '';
+      var p = document.createElement('p');
+      p.style.fontSize = '13px'; p.style.opacity = '.7';
+      p.textContent = 'Nepodarilo sa načítať návrhy.';
+      list.appendChild(p);
+      console.error(e);
+    });
+  }
+
+  function subRefreshReviewButton(){
+    var btn = document.getElementById('sub-review-btn');
+    var countEl = document.getElementById('sub-review-count');
+    if (!btn) return;
+    if (!tagAdminLogged){ btn.hidden = true; return; }
+    btn.hidden = false;
+    tagInit().then(function(){
+      var q = tagFs.query(tagFs.collection(tagDb, 'submissions'), tagFs.where('status', '==', 'pending'));
+      return tagFs.getDocs(q);
+    }).then(function(snap){
+      if (countEl) countEl.textContent = snap.size > 0 ? String(snap.size) : '';
+    })["catch"](function(){});
+  }
+
+  function subWireReview(){
+    var reviewBtn = document.getElementById('sub-review-btn');
+    var closeBtn = document.getElementById('sub-review-close-btn');
+    if (reviewBtn) reviewBtn.addEventListener('click', subOpenReview);
+    if (closeBtn) closeBtn.addEventListener('click', function(){
+      var modal = document.getElementById('sub-review-modal');
+      if (modal) modal.hidden = true;
+      subRefreshReviewButton();
+    });
+  }
+
+  var __origTagUpdateAdminViewForSub = tagUpdateAdminView;
+  tagUpdateAdminView = function(){
+    __origTagUpdateAdminViewForSub();
+    subRefreshReviewButton();
+  };
+
+  subWireForm();
+  subWireReview();
+
 
   // ============ Pridanie vlastnej starej fotky (verejné, čaká na schválenie adminom) ============
   var SUB_UPLOAD_PRESET = "submissions_unsigned";
