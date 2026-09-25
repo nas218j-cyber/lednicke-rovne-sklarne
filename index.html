@@ -795,6 +795,7 @@
       <div class="avatar">MZ</div>
       <div class="who">
         <a href="https://www.youtube.com/@MMicro" target="_blank" rel="noopener">Mirec Zachar · @MMicro</a>
+        <span id="visit-counter"></span>
       </div>
     </div>
   </footer>
@@ -2291,9 +2292,27 @@
     return tagQueryMatches(ph, query);
   };
 
+  
+  // ---- Pocitadlo navstevnosti stranky (Firestore, kolekcia 'stats', dokument 'visits') ----
+  function visitCounterInit(){
+    try {
+      if (!tagFs || !tagDb) return;
+      var ref = tagFs.doc(tagDb, 'stats', 'visits');
+      var elc = document.getElementById('visit-counter');
+      tagFs.onSnapshot(ref, function(snap){
+        if (!elc) return;
+        var n = (snap.exists() && snap.data().count) ? snap.data().count : 0;
+        elc.textContent = n.toLocaleString('sk-SK') + (n === 1 ? ' zobrazenie stranky' : ' zobrazeni stranky');
+      });
+      tagFs.updateDoc(ref, { count: tagFs.increment(1) }).catch(function(){
+        tagFs.setDoc(ref, { count: 1 }).catch(function(e){ console.error('Pocitadlo navstev zlyhalo', e); });
+      });
+    } catch (e) { console.error('Pocitadlo navstev zlyhalo', e); }
+  }
+
   tagWireUI();
   tagWireAdminModal();
-  tagInit();
+  tagInit().then(visitCounterInit);
   // ============ Editovateľný popisok fotky (admin, zobrazený ako značka) ============
   var capCache = {};
   var capReady = null;
