@@ -661,9 +661,9 @@
   .sub-preview-thumb{width:100%; max-height:170px; object-fit:cover; border-radius:8px; margin-bottom:8px; display:none;}
   .sub-preview-thumb.show{display:block;}
   .sub-review-list{max-height:50vh; overflow-y:auto; margin-bottom:10px;}
-  .sub-review-item{display:flex; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,249,242,.15); text-align:left;}
+  .sub-review-item{display:flex; flex-direction:column; gap:8px; padding:10px 0; border-bottom:1px solid rgba(255,249,242,.15); text-align:left;}
   .sub-review-item:last-child{border-bottom:none;}
-  .sub-review-thumb{width:108px; height:108px; object-fit:cover; border-radius:8px; flex:none; background:rgba(255,255,255,.08);}
+  .sub-review-thumb{width:100%; height:220px; object-fit:cover; border-radius:8px; flex:none; background:rgba(255,255,255,.08); cursor:zoom-in;}
   .sub-review-info{flex:1; min-width:0;}
   .sub-review-note{font-size:12.5px; color:#e9d9c4; margin:0 0 6px; word-wrap:break-word;}
   .sub-review-info select{margin-bottom:6px; font-size:12px; padding:5px 8px;}
@@ -2645,6 +2645,8 @@
     img.className = 'sub-review-thumb';
     img.src = photoThumb(d.photoId);
     img.alt = '';
+    img.title = 'Klikni pre zobrazenie v plnej velkosti';
+    img.addEventListener('click', function(){ window.open(photoFull(d.photoId), '_blank'); });
     wrap.appendChild(img);
 
     var info = document.createElement('div');
