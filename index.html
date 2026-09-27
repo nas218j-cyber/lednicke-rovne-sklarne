@@ -693,6 +693,7 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
       </button>
       <button type="button" class="addphotobtn" id="sub-review-btn" title="Návrhy fotiek na schválenie" hidden>📥<span class="sub-badge" id="sub-review-count"></span></button>
+      <button type="button" class="addphotobtn" id="visits-open-btn" title="Návštevnosť" hidden>📊</button>
 
     </div>
 
@@ -923,6 +924,15 @@
       <div class="sub-review-list" id="sub-review-list"></div>
       <p style="font-size:13px;opacity:.7;" id="sub-review-empty" hidden>Žiadne čakajúce návrhy.</p>
       <div class="row"><button type="button" class="secondary" id="sub-review-close-btn">Zavrieť</button></div>
+    </div>
+  </div>
+
+  <div class="lb-admin-modal" id="visits-modal" hidden>
+    <div class="lb-admin-box" style="width:520px;max-width:92vw;max-height:80vh;overflow:auto;">
+      <h4>Návštevnosť</h4>
+      <div id="visits-list"></div>
+      <p style="font-size:13px;opacity:.7;" id="visits-empty" hidden>Zatiaľ žiadne návštevy.</p>
+      <div class="row"><button type="button" class="secondary" id="visits-close-btn">Zavrieť</button></div>
     </div>
   </div>
   <div class="video-player" id="video-player" hidden>
@@ -2836,6 +2846,76 @@
     __origShowTabForVisits(which);
     visitsAddSection(currentTab);
   };
+
+  function visitsFmtDuration(sec){
+    sec = sec || 0;
+    var m = Math.floor(sec / 60), s = sec % 60;
+    return m + ':' + (s < 10 ? '0' + s : s);
+  }
+
+  function visitsRenderItem(docSnap){
+    var d = docSnap.data();
+    var row = document.createElement('div');
+    row.style.cssText = 'padding:8px 0;border-bottom:1px solid rgba(255,255,255,.12);font-size:13px;';
+    var when = '';
+    try { when = (d.startedAt && d.startedAt.toDate) ? d.startedAt.toDate().toLocaleString('sk-SK') : ''; } catch (e) {}
+    var sections = (d.sections || []).join(', ') || '\u2014';
+    var b = document.createElement('b'); b.textContent = when;
+    var meta = document.createElement('span'); meta.textContent = ' \u00b7 ' + (d.country || '?') + ' \u00b7 ' + (d.device || '?') + ' \u00b7 ' + visitsFmtDuration(d.durationSec);
+    var br = document.createElement('br');
+    var secEl = document.createElement('span'); secEl.style.opacity = '.75'; secEl.textContent = sections;
+    row.appendChild(b); row.appendChild(meta); row.appendChild(br); row.appendChild(secEl);
+    return row;
+  }
+
+  function visitsOpen(){
+    var modal = document.getElementById('visits-modal');
+    var list = document.getElementById('visits-list');
+    var empty = document.getElementById('visits-empty');
+    if (!modal || !list) return;
+    modal.hidden = false;
+    if (empty) empty.hidden = true;
+    list.innerHTML = '<p style="font-size:13px;opacity:.7;">Na\u010d\u00edtavam\u2026</p>';
+    tagInit().then(function(){
+      var q = tagFs.query(tagFs.collection(tagDb, 'visit_sessions'), tagFs.orderBy('startedAt', 'desc'), tagFs.limit(50));
+      return tagFs.getDocs(q);
+    }).then(function(snap){
+      list.innerHTML = '';
+      snap.forEach(function(docSnap){ list.appendChild(visitsRenderItem(docSnap)); });
+      if (empty) empty.hidden = snap.size > 0;
+    }).catch(function(e){
+      list.innerHTML = '';
+      var p = document.createElement('p');
+      p.style.fontSize = '13px'; p.style.opacity = '.7';
+      p.textContent = 'Nepodarilo sa na\u010d\u00edta\u0165 n\u00e1v\u0161tevnos\u0165.';
+      list.appendChild(p);
+      console.error(e);
+    });
+  }
+
+  function visitsRefreshButton(){
+    var btn = document.getElementById('visits-open-btn');
+    if (!btn) return;
+    btn.hidden = !tagAdminLogged;
+  }
+
+  function visitsWire(){
+    var openBtn = document.getElementById('visits-open-btn');
+    var closeBtn = document.getElementById('visits-close-btn');
+    if (openBtn) openBtn.addEventListener('click', visitsOpen);
+    if (closeBtn) closeBtn.addEventListener('click', function(){
+      var modal = document.getElementById('visits-modal');
+      if (modal) modal.hidden = true;
+    });
+  }
+
+  var __origTagUpdateAdminViewForVisits = tagUpdateAdminView;
+  tagUpdateAdminView = function(){
+    __origTagUpdateAdminViewForVisits();
+    visitsRefreshButton();
+  };
+
+  visitsWire();
 
 })();
 </script>
