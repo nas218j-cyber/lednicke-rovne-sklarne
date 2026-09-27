@@ -2800,6 +2800,37 @@
       .catch(function(){ return 'ZZ'; });
   }
 
+  function visitMaskIp(ip){
+    if (!ip) return '';
+    if (ip.indexOf(':') !== -1) {
+      var parts6 = ip.split(':');
+      return parts6.slice(0, 4).join(':') + '::x';
+    }
+    var parts4 = ip.split('.');
+    if (parts4.length === 4) return parts4[0] + '.' + parts4[1] + '.' + parts4[2] + '.x';
+    return '';
+  }
+
+  function visitDetectGeo(){
+    return fetch('https://ipwho.is/', { cache: 'no-store' })
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if (j && j.success) {
+          return {
+            country: (j.country_code || 'ZZ').slice(0, 5),
+            city: (j.city || '').slice(0, 100),
+            ipPartial: visitMaskIp(j.ip)
+          };
+        }
+        throw new Error('ipwho zlyhalo');
+      })
+      .catch(function(){
+        return visitDetectCountry().then(function(country){
+          return { country: country, city: '', ipPartial: '' };
+        });
+      });
+  }
+
   function visitsFlush(){
     if (!visitDocId || !visitStartTime) return;
     var durationSec = Math.max(0, Math.round((Date.now() - visitStartTime) / 1000));
@@ -2821,10 +2852,12 @@
     if (!tagFs || !tagDb) return;
     visitStartTime = Date.now();
     visitSections = [currentTab];
-    visitDetectCountry().then(function(country){
+    visitDetectGeo().then(function(geo){
       return tagFs.addDoc(tagFs.collection(tagDb, 'visit_sessions'), {
         startedAt: tagFs.serverTimestamp(),
-        country: country,
+        country: geo.country,
+        city: geo.city,
+        ipPartial: geo.ipPartial,
         durationSec: 0,
         sections: [],
         device: visitDetectDevice()
@@ -2861,7 +2894,8 @@
     try { when = (d.startedAt && d.startedAt.toDate) ? d.startedAt.toDate().toLocaleString('sk-SK') : ''; } catch (e) {}
     var sections = (d.sections || []).join(', ') || '\u2014';
     var b = document.createElement('b'); b.textContent = when;
-    var meta = document.createElement('span'); meta.textContent = ' \u00b7 ' + (d.country || '?') + ' \u00b7 ' + (d.device || '?') + ' \u00b7 ' + visitsFmtDuration(d.durationSec);
+    var loc = (d.city ? d.city + ', ' : '') + (d.country || '?');
+    var meta = document.createElement('span'); meta.textContent = ' \u00b7 ' + loc + ' \u00b7 ' + (d.ipPartial || '') + ' \u00b7 ' + (d.device || '?') + ' \u00b7 ' + visitsFmtDuration(d.durationSec);
     var br = document.createElement('br');
     var secEl = document.createElement('span'); secEl.style.opacity = '.75'; secEl.textContent = sections;
     row.appendChild(b); row.appendChild(meta); row.appendChild(br); row.appendChild(secEl);
