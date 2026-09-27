@@ -2390,7 +2390,7 @@
 
   tagWireUI();
   tagWireAdminModal();
-  tagInit().then(visitCounterInit);
+  tagInit().then(function(){ visitCounterInit(); visitLogInit(); });
   // ============ Editovateľný popisok fotky (admin, zobrazený ako značka) ============
   var capCache = {};
   var capReady = null;
@@ -2772,6 +2772,70 @@
   subWireForm();
   subWireReview();
 
+  // ==== Navstevnost (visit tracking) ====
+  var visitDocId = null;
+  var visitStartTime = null;
+  var visitSections = [];
+  var visitFlushTimer = null;
+
+  function visitDetectDevice(){
+    try { return (window.innerWidth <= 820) ? 'mobile' : 'desktop'; }
+    catch (e) { return 'desktop'; }
+  }
+
+  function visitDetectCountry(){
+    return fetch('https://www.cloudflare.com/cdn-cgi/trace', { cache: 'no-store' })
+      .then(function(r){ return r.text(); })
+      .then(function(t){ var m = t.match(/loc=([A-Z]{2})/); return m ? m[1] : 'ZZ'; })
+      .catch(function(){ return 'ZZ'; });
+  }
+
+  function visitsFlush(){
+    if (!visitDocId || !visitStartTime) return;
+    var durationSec = Math.max(0, Math.round((Date.now() - visitStartTime) / 1000));
+    if (durationSec > 43200) durationSec = 43200;
+    tagFs.updateDoc(tagFs.doc(tagDb, 'visit_sessions', visitDocId), {
+      durationSec: durationSec,
+      sections: visitSections.slice(0, 10)
+    }).catch(function(e){ console.warn('visitsFlush zlyhalo', e); });
+  }
+
+  function visitsAddSection(section){
+    if (!section) return;
+    if (visitSections.indexOf(section) === -1 && visitSections.length < 10) {
+      visitSections.push(section);
+    }
+  }
+
+  function visitLogInit(){
+    if (!tagFs || !tagDb) return;
+    visitStartTime = Date.now();
+    visitSections = [currentTab];
+    visitDetectCountry().then(function(country){
+      return tagFs.addDoc(tagFs.collection(tagDb, 'visit_sessions'), {
+        startedAt: tagFs.serverTimestamp(),
+        country: country,
+        durationSec: 0,
+        sections: [],
+        device: visitDetectDevice()
+      });
+    }).then(function(ref){
+      visitDocId = ref.id;
+      visitsFlush();
+    }).catch(function(e){ console.warn('visitLogInit zlyhalo', e); });
+    if (visitFlushTimer) clearInterval(visitFlushTimer);
+    visitFlushTimer = setInterval(visitsFlush, 25000);
+    document.addEventListener('visibilitychange', function(){
+      if (document.hidden) visitsFlush();
+    });
+    window.addEventListener('pagehide', function(){ visitsFlush(); });
+  }
+
+  var __origShowTabForVisits = showTab;
+  showTab = function(which){
+    __origShowTabForVisits(which);
+    visitsAddSection(currentTab);
+  };
 
 })();
 </script>
