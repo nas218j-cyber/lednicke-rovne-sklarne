@@ -646,6 +646,8 @@
   .addphotobtn:hover{background:var(--surface-2);}
   .addphotobtn[hidden]{display:none;}
   #sub-review-btn{width:auto; padding:0 12px;}
+  #sub-open-btn{width:auto; padding:0 12px;}
+  .addphotobtn-label{font-size:12.5px; white-space:nowrap;}
   .sub-badge{
     display:inline-block; min-width:16px; height:16px; padding:0 4px; margin-left:2px;
     background:var(--accent); color:#fff9f2; border-radius:999px; font-size:10px;
@@ -691,6 +693,7 @@
 
       <button type="button" class="addphotobtn" id="sub-open-btn" title="Pridať starú fotku">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <span class="addphotobtn-label">Pridať fotku</span>
       </button>
       <button type="button" class="addphotobtn" id="sub-review-btn" title="Návrhy fotiek na schválenie" hidden>📥<span class="sub-badge" id="sub-review-count"></span></button>
       <button type="button" class="addphotobtn" id="visits-open-btn" title="Návštevnosť" hidden>📊</button>
