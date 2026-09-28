@@ -569,6 +569,13 @@
     color:#fff9f2; background:none; border:none; cursor:pointer; font-family:"Work Sans", sans-serif;
   }
   .lb-tag-admin-toggle:hover{opacity:.7;}
+  .lb-photo-del-btn{
+    display:block; margin:10px auto 0; opacity:.6; font-size:11px;
+    color:#ff9d9d; background:none; border:1px solid rgba(255,157,157,.4); border-radius:999px;
+    padding:5px 12px; cursor:pointer; font-family:"Work Sans", sans-serif;
+  }
+  .lb-photo-del-btn:hover{opacity:1; background:rgba(255,157,157,.1);}
+  .lb-photo-del-btn[hidden]{display:none;}
   .lb-pins{ position:absolute; pointer-events:none; transform-origin:center center; will-change:transform; }
   .lb-pins.placing{ pointer-events:auto; cursor:crosshair; }
   .lb-pin{ position:absolute; transform:translate(-50%,-50%); pointer-events:auto; }
@@ -871,6 +878,7 @@
         </span>
       </div>
       <div class="lb-tag-msg" id="lb-tag-msg"></div>
+      <button type="button" class="lb-photo-del-btn" id="lb-photo-del-btn" hidden>Vymazať fotku</button>
       <button type="button" class="lb-tag-admin-toggle" id="lb-tag-admin-toggle">admin</button>
     </div>
   <div class="lb-admin-modal" id="lb-admin-modal" hidden>
@@ -2513,6 +2521,60 @@
   };
 
   capWire();
+
+  // ============ Vymazanie fotky z galérie (len admin) ============
+  // Klientská appka nemá (a nesmie mať) Cloudinary/GitHub API secret potrebný na prepis
+  // data-live.json, takže mazanie funguje rovnako ako schvaľovanie fotiek: admin klikom
+  // len POŽIADA o zmazanie (zápis do Firestore kolekcie 'deletions'), skutočné odstránenie
+  // z data-live.json vykoná denná automatizovaná scheduled úloha (rovnaký vzor ako 'submissions').
+  var photoDelLastClick = 0;
+  function photoDelRender(){
+    var btn = document.getElementById('lb-photo-del-btn');
+    if (btn) btn.hidden = !tagAdminLogged;
+  }
+  function photoDelRemoveLocally(pid){
+    function stripFrom(arr){
+      for (var i = arr.length - 1; i >= 0; i--){
+        if (arr[i] && arr[i].p === pid) arr.splice(i, 1);
+      }
+    }
+    stripFrom(PHOTOS);
+    stripFrom(SKL_PHOTOS);
+    if (typeof fotoRendered !== 'undefined' && fotoRendered) renderFoto();
+    if (typeof sklRendered !== 'undefined' && sklRendered) renderSkl();
+  }
+  function photoDelRequest(){
+    if (!tagAdminLogged || !tagAuth || !tagAuth.currentUser) return;
+    var now = Date.now();
+    if (now - photoDelLastClick < 2000) return;
+    photoDelLastClick = now;
+    var ph = capCurrentPhoto();
+    if (!ph) return;
+    var pid = ph.p;
+    if (!confirm('Naozaj natrvalo vymazať túto fotku z galérie?\n\nZmena sa prejaví na stránke aj v appke do 24 hodín (pri najbližšom behu dennej publikačnej úlohy).')) return;
+    tagInit().then(function(){
+      return tagFs.addDoc(tagFs.collection(tagDb, 'deletions'), {
+        photoId: pid,
+        requestedAt: tagFs.serverTimestamp()
+      });
+    }).then(function(){
+      photoDelRemoveLocally(pid);
+      closeLightbox();
+    })['catch'](function(e){
+      alert('Nepodarilo sa označiť fotku na vymazanie, skús to prosím znova.');
+      console.error(e);
+    });
+  }
+  function photoDelWire(){
+    var btn = document.getElementById('lb-photo-del-btn');
+    if (btn) btn.addEventListener('click', photoDelRequest);
+  }
+  var __origTagRenderChipsForDel = tagRenderChips;
+  tagRenderChips = function(){
+    __origTagRenderChipsForDel();
+    photoDelRender();
+  };
+  photoDelWire();
 
   // ============ Pridanie vlastnej starej fotky (verejné, čaká na schválenie adminom) ============
   var SUB_UPLOAD_PRESET = "submissions_unsigned";
