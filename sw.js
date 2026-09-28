@@ -33,10 +33,11 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
 
-  // Fotky z Cloudinary: cache-first, nech fungujú aj offline po prvom zobrazení.
+  // Fotky (od 28.9.2026 Fázy 2 z jsDelivr/GitHub fotorepozitára, staršie prípadne ešte z
+  // Cloudinary) - cache-first, nech fungujú aj offline po prvom zobrazení.
   // Odpoveď na <img> request cez cudziu doménu je "opaque" (status 0, ok:false),
   // ale stále sa dá bezpečne uložiť do Cache Storage a znova prehrať.
-  if (url.hostname === "res.cloudinary.com") {
+  if (url.hostname === "res.cloudinary.com" || url.hostname === "cdn.jsdelivr.net") {
     event.respondWith(
       caches.open(PHOTO_CACHE).then((cache) =>
         cache.match(event.request).then((cached) => {
