@@ -1291,8 +1291,26 @@
   var currentPhotoList = [];
   var currentPhotoIndex = -1;
 
-  function photoThumb(p){ return "https://res.cloudinary.com/" + PHOTO_CLOUD + "/image/upload/f_auto,q_auto,w_450,h_450,c_fill/" + p; }
-  function photoFull(p){ return "https://res.cloudinary.com/" + PHOTO_CLOUD + "/image/upload/f_auto,q_auto,w_1600/" + p; }
+  // Fotky sa od Fazy 2 (28.9.2026) servíruju cez jsDelivr z GitHub fotorepozitára, nie cez Cloudinary.
+  // Nazov suboru v repozitári je encodeURIComponent(photoId)+".jpg" (tak boli fotky migrované),
+  // a keďže tento nazov casto sam obsahuje znaky "%" (napr. povodne %2F za lomitko v photoId),
+  // treba ho pre samotnu URL este raz zakódovat (dvojite kódovanie), inak server "%2F" v ceste
+  // omylom vylozi ako lomitko a vráti 404 (overené naživo pri migrácii).
+  var PHOTOS_REPO = "nas218j-cyber/lednicke-rovne-sklarne-photos";
+  var PHOTOS_REF = "main";
+  function photosRepoUrl(p, folder){
+    var name = encodeURIComponent(encodeURIComponent(p) + ".jpg");
+    return "https://cdn.jsdelivr.net/gh/" + PHOTOS_REPO + "@" + PHOTOS_REF + "/" + folder + "/" + name;
+  }
+  function photoThumb(p){ return photosRepoUrl(p, "thumb"); }
+  function photoFull(p){ return photosRepoUrl(p, "full"); }
+
+  // Náhľad EŠTE NESCHVÁLENÉHO návrhu fotky ("submissions") ostáva na Cloudinary aj po Fáze 2 -
+  // navrhnuté fotky sa nahrávajú priamo na Cloudinary (submissions_unsigned preset) a do GitHub
+  // fotorepozitára sa presunú až pri schválení a publikovaní (Fáza 3, zatiaľ nezmenené), takže
+  // dovtedy fyzicky existujú len na Cloudinary - photoThumb/photoFull na ne nesmú byť použité.
+  function subPhotoThumb(p){ return "https://res.cloudinary.com/" + PHOTO_CLOUD + "/image/upload/f_auto,q_auto,w_450,h_450,c_fill/" + p; }
+  function subPhotoFull(p){ return "https://res.cloudinary.com/" + PHOTO_CLOUD + "/image/upload/f_auto,q_auto,w_1600/" + p; }
 
   function fotoCatLabel(catId){
     for (var i = 0; i < PHOTO_CATS.length; i++){
@@ -1589,7 +1607,11 @@
   }
 
   (function(){
-    var REMOTE_DATA_URL = "https://res.cloudinary.com/" + PHOTO_CLOUD + "/raw/upload/app-data/data-live.json";
+    // Od Fázy 2 (28.9.2026) sa data-live.json číta z GitHub fotorepozitára cez raw.githubusercontent.com
+    // (nie cez jsDelivr) - jsDelivr cachuje @main natrvalo/na dlho, čo by spôsobilo, že nové/zmazané
+    // fotky by sa v appke prejavili neskoro; raw.githubusercontent.com sa dá spoľahlivo "vynútiť čerstvý"
+    // rovnakým cache-busting vzorom (?t=... + cache:"no-store"), aký appka používala aj pri Cloudinary.
+    var REMOTE_DATA_URL = "https://raw.githubusercontent.com/" + PHOTOS_REPO + "/" + PHOTOS_REF + "/data-live.json";
     fetch(REMOTE_DATA_URL + "?t=" + Date.now(), {cache:"no-store"})
       .then(function(r){ if (!r.ok) throw new Error("http " + r.status); return r.json(); })
       .then(function(data){ refreshFromRemoteData(data); })
@@ -2718,10 +2740,10 @@
 
     var img = document.createElement('img');
     img.className = 'sub-review-thumb';
-    img.src = photoThumb(d.photoId);
+    img.src = subPhotoThumb(d.photoId);
     img.alt = '';
     img.title = 'Klikni pre zobrazenie v plnej velkosti';
-    img.addEventListener('click', function(){ window.open(photoFull(d.photoId), '_blank'); });
+    img.addEventListener('click', function(){ window.open(subPhotoFull(d.photoId), '_blank'); });
     wrap.appendChild(img);
 
     var info = document.createElement('div');
