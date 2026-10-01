@@ -1407,8 +1407,8 @@
     var name = encodeURIComponent(encodeURIComponent(p) + ".jpg");
     return "https://cdn.jsdelivr.net/gh/" + PHOTOS_REPO + "@" + PHOTOS_REF + "/" + folder + "/" + name;
   }
-  function photoThumb(p){ return photosRepoUrl(p, "thumb"); }
-  function photoFull(p){ return photosRepoUrl(p, "full"); }
+  function photoThumb(p){ return "https://wsrv.nl/?url=" + encodeURIComponent(photosRepoUrl(p, "thumb")) + "&w=320&q=75&output=webp"; }
+  function photoFull(p){ return "https://wsrv.nl/?url=" + encodeURIComponent(photosRepoUrl(p, "full")) + "&w=1600&q=82&output=webp"; }
 
   // Náhľad EŠTE NESCHVÁLENÉHO návrhu fotky ("submissions") ostáva na Cloudinary aj po Fáze 2 -
   // navrhnuté fotky sa nahrávajú priamo na Cloudinary (submissions_unsigned preset) a do GitHub
