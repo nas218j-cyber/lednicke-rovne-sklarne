@@ -34,7 +34,7 @@
     --scrollbar:rgba(243,232,215,0.22);
   }
   @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]):not([data-theme="wine"]):not([data-theme="gray"]):not([data-theme="retro"]){
+    :root:not([data-theme="light"]):not([data-theme="wine"]):not([data-theme="retro"]){
       --bg:#18130d;
       --bg-grain:#1f1810;
       --surface:#241c13;
@@ -106,24 +106,6 @@
     --shadow:0 1px 2px rgba(0,0,0,0.3), 0 10px 26px -12px rgba(0,0,0,0.55);
     --chip-bg:#2c171d;
     --scrollbar:rgba(242,227,224,0.22);
-  }
-  :root[data-theme="gray"]{
-    --bg:#1a1b1d;
-    --bg-grain:#202124;
-    --surface:#242528;
-    --surface-2:#2c2d31;
-    --text:#ecedef;
-    --text-muted:#a7abb2;
-    --text-faint:#85898f;
-    --accent:#c9a15a;
-    --accent-strong:#ddb978;
-    --accent-tint:#332a1a;
-    --accent2:#7b8a99;
-    --accent2-tint:#232a30;
-    --border:rgba(236,238,240,0.12);
-    --shadow:0 1px 2px rgba(0,0,0,0.3), 0 10px 26px -12px rgba(0,0,0,0.55);
-    --chip-bg:#242528;
-    --scrollbar:rgba(236,238,240,0.22);
   }
   :root[data-theme="retro"]{
     --bg:#1c1c1c;
@@ -739,8 +721,7 @@
   .theme-panel{
     position:absolute; top:52px; right:0; z-index:9;
     background:var(--surface); border:1px solid var(--border); border-radius:14px;
-    box-shadow:var(--shadow); padding:10px; display:flex; flex-wrap:wrap; gap:8px;
-    width:202px;
+    box-shadow:var(--shadow); padding:10px; display:flex; gap:8px;
     opacity:0; transform:translateY(-6px) scale(.97); pointer-events:none;
     transition:opacity .16s ease, transform .16s ease;
   }
@@ -762,8 +743,7 @@
   .theme-swatch[aria-pressed="true"]{outline:2px solid var(--accent); outline-offset:-2px; border-radius:10px;}
   .theme-swatch[aria-pressed="true"] span{color:var(--text);}
 
-  /* --- retro čb: zašumená stará fotografia --- */
-  :root[data-theme="retro"] img{filter:grayscale(1) contrast(1.08) brightness(.98);}
+  /* --- retro: zašumené staré pozadie (fotky ostávajú nedotknuté) --- */
   body::after{
     content:""; position:fixed; inset:0; z-index:40; pointer-events:none; opacity:0;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch' result='t'/><feColorMatrix in='t' type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
@@ -830,10 +810,6 @@
           <button type="button" class="theme-swatch" data-theme="wine" role="menuitemradio" aria-pressed="false">
             <span class="dot"><i style="background:#1c0f12"></i><i style="background:#d9a24b"></i></span>
             <span>Bordová</span>
-          </button>
-          <button type="button" class="theme-swatch" data-theme="gray" role="menuitemradio" aria-pressed="false">
-            <span class="dot"><i style="background:#1a1b1d"></i><i style="background:#c9a15a"></i></span>
-            <span>Sivá</span>
           </button>
           <button type="button" class="theme-swatch" data-theme="retro" role="menuitemradio" aria-pressed="false">
             <span class="dot"><i style="background:#141414"></i><i style="background:#f1efe9"></i></span>
