@@ -34,7 +34,7 @@
     --scrollbar:rgba(243,232,215,0.22);
   }
   @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
+    :root:not([data-theme="light"]):not([data-theme="wine"]):not([data-theme="gray"]){
       --bg:#18130d;
       --bg-grain:#1f1810;
       --surface:#241c13;
@@ -70,6 +70,60 @@
     --shadow:0 1px 2px rgba(0,0,0,0.3), 0 10px 26px -12px rgba(0,0,0,0.55);
     --chip-bg:#241c13;
     --scrollbar:rgba(243,232,215,0.22);
+  }
+  :root[data-theme="light"]{
+    --bg:#faf6ef;
+    --bg-grain:#f3ecdf;
+    --surface:#ffffff;
+    --surface-2:#f5efe3;
+    --text:#2b2116;
+    --text-muted:#6b5a44;
+    --text-faint:#9c8b73;
+    --accent:#d9722e;
+    --accent-strong:#b85a1e;
+    --accent-tint:#fbe4cc;
+    --accent2:#2f8c7d;
+    --accent2-tint:#dcf2ee;
+    --border:rgba(43,33,22,0.14);
+    --shadow:0 1px 2px rgba(43,33,22,0.08), 0 10px 26px -12px rgba(43,33,22,0.18);
+    --chip-bg:#f5efe3;
+    --scrollbar:rgba(43,33,22,0.22);
+  }
+  :root[data-theme="wine"]{
+    --bg:#1c0f12;
+    --bg-grain:#24141a;
+    --surface:#2c171d;
+    --surface-2:#351c23;
+    --text:#f2e3e0;
+    --text-muted:#c79a9f;
+    --text-faint:#a8818a;
+    --accent:#d9a24b;
+    --accent-strong:#eac06a;
+    --accent-tint:#3d2a16;
+    --accent2:#9a5366;
+    --accent2-tint:#3a1f26;
+    --border:rgba(242,227,224,0.13);
+    --shadow:0 1px 2px rgba(0,0,0,0.3), 0 10px 26px -12px rgba(0,0,0,0.55);
+    --chip-bg:#2c171d;
+    --scrollbar:rgba(242,227,224,0.22);
+  }
+  :root[data-theme="gray"]{
+    --bg:#1a1b1d;
+    --bg-grain:#202124;
+    --surface:#242528;
+    --surface-2:#2c2d31;
+    --text:#ecedef;
+    --text-muted:#a7abb2;
+    --text-faint:#85898f;
+    --accent:#c9a15a;
+    --accent-strong:#ddb978;
+    --accent-tint:#332a1a;
+    --accent2:#7b8a99;
+    --accent2-tint:#232a30;
+    --border:rgba(236,238,240,0.12);
+    --shadow:0 1px 2px rgba(0,0,0,0.3), 0 10px 26px -12px rgba(0,0,0,0.55);
+    --chip-bg:#242528;
+    --scrollbar:rgba(236,238,240,0.22);
   }
 
   *{box-sizing:border-box;}
@@ -661,6 +715,33 @@
     line-height:16px; text-align:center; font-family:"Work Sans", sans-serif; vertical-align:middle;
   }
   .sub-badge:empty{display:none;}
+
+  /* --- theme switcher --- */
+  .theme-switch{position:relative;}
+  .theme-panel{
+    position:absolute; top:52px; right:0; z-index:9;
+    background:var(--surface); border:1px solid var(--border); border-radius:14px;
+    box-shadow:var(--shadow); padding:10px; display:flex; gap:8px;
+    opacity:0; transform:translateY(-6px) scale(.97); pointer-events:none;
+    transition:opacity .16s ease, transform .16s ease;
+  }
+  .theme-panel[data-open="true"]{opacity:1; transform:translateY(0) scale(1); pointer-events:auto;}
+  .theme-swatch{
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    background:none; border:0; cursor:pointer; padding:4px; border-radius:10px; width:54px;
+    font-family:inherit;
+  }
+  .theme-swatch:hover{background:var(--surface-2);}
+  .theme-swatch .dot{
+    width:28px; height:28px; border-radius:50%; position:relative; overflow:hidden;
+    border:1px solid var(--border); flex:none;
+  }
+  .theme-swatch .dot i{position:absolute; inset:0;}
+  .theme-swatch .dot i:first-child{clip-path:polygon(0 0,100% 0,100% 100%,0 100%);}
+  .theme-swatch .dot i:last-child{clip-path:polygon(100% 0,100% 100%,0 100%);}
+  .theme-swatch span{font-size:10.5px; color:var(--text-muted); font-weight:500; line-height:1.2; text-align:center;}
+  .theme-swatch[aria-pressed="true"]{outline:2px solid var(--accent); outline-offset:-2px; border-radius:10px;}
+  .theme-swatch[aria-pressed="true"] span{color:var(--text);}
   .lb-admin-box select, .lb-admin-box textarea{
     width:100%; box-sizing:border-box; background:rgba(255,255,255,.08);
     border:1px solid rgba(255,249,242,.35); color:#fff9f2; padding:8px 10px;
@@ -704,6 +785,30 @@
       </button>
       <button type="button" class="addphotobtn" id="sub-review-btn" title="Návrhy fotiek na schválenie" hidden>📥<span class="sub-badge" id="sub-review-count"></span></button>
       <button type="button" class="addphotobtn" id="visits-open-btn" title="Návštevnosť" hidden>📊</button>
+
+      <div class="theme-switch">
+        <button type="button" class="addphotobtn" id="theme-toggle-btn" title="Zmeniť tému" aria-haspopup="true" aria-expanded="false">
+          <svg width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"></circle><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"></path></svg>
+        </button>
+        <div class="theme-panel" id="theme-panel" role="menu">
+          <button type="button" class="theme-swatch" data-theme="dark" role="menuitemradio" aria-pressed="false">
+            <span class="dot"><i style="background:#18130d"></i><i style="background:#ef9046"></i></span>
+            <span>Tmavá</span>
+          </button>
+          <button type="button" class="theme-swatch" data-theme="light" role="menuitemradio" aria-pressed="false">
+            <span class="dot"><i style="background:#faf6ef"></i><i style="background:#d9722e"></i></span>
+            <span>Biela</span>
+          </button>
+          <button type="button" class="theme-swatch" data-theme="wine" role="menuitemradio" aria-pressed="false">
+            <span class="dot"><i style="background:#1c0f12"></i><i style="background:#d9a24b"></i></span>
+            <span>Bordová</span>
+          </button>
+          <button type="button" class="theme-swatch" data-theme="gray" role="menuitemradio" aria-pressed="false">
+            <span class="dot"><i style="background:#1a1b1d"></i><i style="background:#c9a15a"></i></span>
+            <span>Sivá</span>
+          </button>
+        </div>
+      </div>
 
     </div>
 
@@ -3037,6 +3142,48 @@
   };
 
   visitsWire();
+
+  function themeApply(id, persist){
+    document.documentElement.setAttribute('data-theme', id);
+    Array.prototype.slice.call(document.querySelectorAll('.theme-swatch')).forEach(function(sw){
+      sw.setAttribute('aria-pressed', sw.getAttribute('data-theme') === id ? 'true' : 'false');
+    });
+    if (persist !== false){
+      try { localStorage.setItem('sklolr-theme', id); } catch(e){}
+    }
+  }
+  function themeOpenPanel(open){
+    var panel = document.getElementById('theme-panel');
+    var btn = document.getElementById('theme-toggle-btn');
+    if (!panel || !btn) return;
+    panel.setAttribute('data-open', open ? 'true' : 'false');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  function themeWire(){
+    var btn = document.getElementById('theme-toggle-btn');
+    var panel = document.getElementById('theme-panel');
+    if (!btn || !panel) return;
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      themeOpenPanel(panel.getAttribute('data-open') !== 'true');
+    });
+    document.addEventListener('click', function(e){
+      if (!panel.contains(e.target) && e.target !== btn) themeOpenPanel(false);
+    });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') themeOpenPanel(false);
+    });
+    Array.prototype.slice.call(panel.querySelectorAll('.theme-swatch')).forEach(function(sw){
+      sw.addEventListener('click', function(){
+        themeApply(sw.getAttribute('data-theme'));
+        themeOpenPanel(false);
+      });
+    });
+    var saved = null;
+    try { saved = localStorage.getItem('sklolr-theme'); } catch(e){}
+    themeApply(saved || 'dark', false);
+  }
+  themeWire();
 
 })();
 </script>
