@@ -2423,6 +2423,7 @@
     var hint = document.getElementById('lb-tag-hint');
     var formEl = document.getElementById('lb-tag-form');
     var msgEl = document.getElementById('lb-tag-msg');
+    var inputEl = document.getElementById('lb-tag-input');
     var tmp = document.getElementById('lb-pin-tmp');
     if (tmp) tmp.remove();
     if (pins) pins.classList.remove('placing');
@@ -2430,6 +2431,7 @@
     if (hint) hint.hidden = true;
     if (formEl) formEl.hidden = true;
     if (msgEl) msgEl.textContent = '';
+    if (inputEl) inputEl.value = '';
   }
 
   function tagOnPinsClick(ev){
