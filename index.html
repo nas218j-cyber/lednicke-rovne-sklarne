@@ -1317,6 +1317,7 @@
   var vpVideo = document.getElementById("vp-video");
   var vpTitle = document.getElementById("vp-title");
   var vpExternal = document.getElementById("vp-external");
+  var videoPlaySession = 0;
   var vpBack = document.getElementById("vp-back");
 
   function notifyAndroidPlayerState(isOpen){
@@ -1401,9 +1402,8 @@
     vpVideo.pause();
     vpVideo.removeAttribute("src");
     vpVideo.load();
-    vpVideo.src = url;
-    vpVideo.load();
-    vpVideo.play().catch(function(){});
+    videoPlaySession++;
+    loadAndPlayVideoWithRetry(vpVideo, url, 0, videoPlaySession);
     vpTitle.textContent = title || "";
     // Súborové video nemá vlastnú stránku na YouTube, tak odkaz "Otvoriť v YouTube appke" schováme.
     vpExternal.hidden = true;
@@ -1413,9 +1413,36 @@
     pushOverlayHistory();
   }
 
+  // Na niektorých mobilných prehliadačoch (hlavne Chrome na iPade) sa občas stane,
+  // že prvé načítanie súborového videa z CDN zlyhá (napr. dočasný výpadok siete alebo
+  // zle vrátená odpoveď z okrajového serveru) a video skončí v stave "nejde prehrať".
+  // Namiesto toho, aby sme to po prvej chybe vzdali, skúsime znova načítať ten istý
+  // súbor (s pridaným parametrom v URL, aby sme obišli prípadnú zlú medzipamäť) —
+  // celkovo max. 3 pokusy. "session" zabezpečí, že sa neskorý pokus neprejaví, ak
+  // si medzitým používateľ otvoril iné video alebo prehrávač zatvoril.
+  function loadAndPlayVideoWithRetry(videoEl, baseUrl, attempt, session){
+    if (session !== videoPlaySession) return;
+    var retryUrl = attempt === 0 ? baseUrl :
+      baseUrl + (baseUrl.indexOf("?") === -1 ? "?" : "&") + "retry=" + attempt + "_" + Date.now();
+    var onError = function(){
+      videoEl.removeEventListener("error", onError);
+      if (session !== videoPlaySession) return;
+      if (attempt < 2){
+        setTimeout(function(){
+          loadAndPlayVideoWithRetry(videoEl, baseUrl, attempt + 1, session);
+        }, 500);
+      }
+    };
+    videoEl.addEventListener("error", onError, { once: true });
+    videoEl.src = retryUrl;
+    videoEl.load();
+    videoEl.play().catch(function(){});
+  }
+
   function hidePlayerUI(){
     if (videoPlayerEl.hidden) return;
     videoPlayerEl.hidden = true;
+    videoPlaySession++;
     // Samotné vynulovanie src niekedy nestačí – prehrávač vie ešte chvíľu dobiehať
     // na pozadí a zvuk sa nečakane ozve, aj keď video už nevidno. Preto iframe rovno
     // nahradíme úplne novým prvkom (nie len zmenou src) — tak zaniká aj jeho vnútorné
