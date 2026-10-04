@@ -460,15 +460,15 @@
 
   /* --- 3D "glass pane" flip transition medzi Videá / História --- */
   main{ position:relative; perspective:1400px; }
-  #view-videos, #view-history, #view-foto, #view-sklarne{
+  #view-videos, #view-history, #view-foto, #view-sklarne, #view-videoai{
     transform-style:preserve-3d;
     backface-visibility:hidden;
     transform-origin:50% 50%;
   }
-  #view-videos.flip-out, #view-history.flip-out, #view-foto.flip-out, #view-sklarne.flip-out{
+  #view-videos.flip-out, #view-history.flip-out, #view-foto.flip-out, #view-sklarne.flip-out, #view-videoai.flip-out{
     animation:paneFlipOut .32s cubic-bezier(.4,0,.2,1) forwards;
   }
-  #view-videos.flip-in, #view-history.flip-in, #view-foto.flip-in, #view-sklarne.flip-in{
+  #view-videos.flip-in, #view-history.flip-in, #view-foto.flip-in, #view-sklarne.flip-in, #view-videoai.flip-in{
     animation:paneFlipIn .4s cubic-bezier(.16,1,.3,1) forwards;
   }
   @keyframes paneFlipOut{
@@ -493,8 +493,8 @@
     100%{transform:translateX(120%); opacity:0;}
   }
   @media (prefers-reduced-motion: reduce){
-    #view-videos.flip-out, #view-history.flip-out, #view-foto.flip-out, #view-sklarne.flip-out,
-    #view-videos.flip-in, #view-history.flip-in, #view-foto.flip-in, #view-sklarne.flip-in,
+    #view-videos.flip-out, #view-history.flip-out, #view-foto.flip-out, #view-sklarne.flip-out, #view-videoai.flip-out,
+    #view-videos.flip-in, #view-history.flip-in, #view-foto.flip-in, #view-sklarne.flip-in, #view-videoai.flip-in,
     .glass-shine.sweep{ animation:none !important; }
   }
 
@@ -929,6 +929,7 @@
       <button class="toptab" id="tab-foto" type="button" role="tab" aria-selected="true">Foto LR</button>
       <button class="toptab" id="tab-sklarne" type="button" role="tab" aria-selected="false">Foto skláreň</button>
       <button class="toptab" id="tab-videos" type="button" role="tab" aria-selected="false">Videá</button>
+      <button class="toptab" id="tab-videoai" type="button" role="tab" aria-selected="false">Videá AI</button>
       <button class="toptab" id="tab-history" type="button" role="tab" aria-selected="false">História</button>
     </div>
 
@@ -962,6 +963,11 @@
         <p>Nainštaluj si toto ako appku na plochu telefónu.</p>
         <button id="installbtn" type="button">Inštalovať</button>
       </div>
+    </div>
+
+    <div id="view-videoai" hidden>
+      <div id="videoai-sections"></div>
+      <p class="empty" id="videoai-empty">Zatiaľ žiadne AI videá.</p>
     </div>
 
     <div id="view-history" class="history" hidden>
@@ -1195,7 +1201,7 @@
 
   var PHOTO_CLOUD = "nryz9plw";
 
-  var CATS = [{"id":"vsetky","label":"Všetky"},{"id":"history","label":"Archívne zábery"},{"id":"portraits","label":"Sklárski majstri"},{"id":"tv","label":"TV reportáže"},{"id":"foto","label":"Video foto"},{"id":"obec","label":"Obec"},{"id":"prerabka-namestia","label":"Rekonštrukcia námestia"},{"id":"skola","label":"SOŠ · tvarovanie skla"},{"id":"reklamy","label":"Reklamy"},{"id":"videa-ai","label":"Videá AI"}];
+  var CATS = [{"id":"vsetky","label":"Všetky"},{"id":"history","label":"Archívne zábery"},{"id":"portraits","label":"Sklárski majstri"},{"id":"tv","label":"TV reportáže"},{"id":"foto","label":"Video foto"},{"id":"obec","label":"Obec"},{"id":"prerabka-namestia","label":"Rekonštrukcia námestia"},{"id":"skola","label":"SOŠ · tvarovanie skla"},{"id":"reklamy","label":"Reklamy"}];
 
   var SECTION_META = {"history":{"title":"Archívne zábery","note":"Dobové natáčanie sklární a sklárskych sympózií, 1965 – 2000."},"portraits":{"title":"Sklárski majstri","note":"Portréty fúkačov, dizájnérov a ocenených remeselníkov."},"tv":{"title":"TV reportáže","note":"Relácie RTVS, Markíza a ČT o sklárňach v Lednických Rovniach."},"foto":{"title":"Video foto","note":"Retro fotografie obce a sklárne spracované do videa."},"obec":{"title":"Obec","note":"Lednické Rovne – park, rekonštrukcia."},"skola":{"title":"SOŠ · tvarovanie skla","note":"Zábery ručného tvarovania skla zo strednej odbornej školy."},"reklamy":{"title":"Reklamy","note":"Reklamné a propagačné spoty RONA a sklární Lednické Rovne."},"prerabka-namestia":{"title":"Rekonštrukcia námestia","note":"Rekonštrukcia námestia a jeho okolia v Lednických Rovniach."},"videa-ai":{"title":"Videá AI","note":"Krátke AI videá oživujúce staré fotografie — zatiaľ 1. máj."}};
 
@@ -1439,6 +1445,46 @@
     openPlayer(card.getAttribute("data-video-id"), card.getAttribute("data-video-title"));
   });
 
+  // --- Videá AI: samostatná záložka (bez kategórií/chips) — jednoduchý zoznam kariet AI videí ---
+  var videoaiSectionsEl = document.getElementById("videoai-sections");
+  var videoaiEmptyEl = document.getElementById("videoai-empty");
+  var videoaiRendered = false;
+
+  function renderVideoai(){
+    videoaiSectionsEl.innerHTML = "";
+    var items = VIDEOS.filter(function(v){ return v.cat === "videa-ai"; });
+    if (items.length){
+      var meta = SECTION_META["videa-ai"] || {title:"Videá AI", note:""};
+      var sec = document.createElement("section");
+      sec.className = "section";
+      sec.innerHTML =
+        '<div class="section-head"><h2>' + meta.title + '</h2><span class="count">' + items.length + '</span></div>' +
+        (meta.note ? '<p class="section-note">' + meta.note + '</p>' : '') +
+        '<div class="list">' + items.map(cardHtml).join("") + '</div>';
+      videoaiSectionsEl.appendChild(sec);
+    }
+    videoaiEmptyEl.classList.toggle("show", items.length === 0);
+  }
+
+  function ensureVideoaiRendered(){
+    if (videoaiRendered) return;
+    videoaiRendered = true;
+    renderVideoai();
+  }
+
+  videoaiSectionsEl.addEventListener("click", function(e){
+    var fileCard = e.target.closest(".card[data-video-file]");
+    if (fileCard) {
+      e.preventDefault();
+      openPlayerFile(fileCard.getAttribute("data-video-file"), fileCard.getAttribute("data-video-title"));
+      return;
+    }
+    var card = e.target.closest(".card[data-video-id]");
+    if (!card) return;
+    e.preventDefault();
+    openPlayer(card.getAttribute("data-video-id"), card.getAttribute("data-video-title"));
+  });
+
   vpBack.addEventListener("click", closePlayer);
   document.addEventListener("keydown", function(e){
     if (e.key === "Escape" && !videoPlayerEl.hidden) closePlayer();
@@ -1446,10 +1492,12 @@
 
   // --- Top tabs: Foto / Sklárne / Videá / História ---
   var tabVideos = document.getElementById("tab-videos");
+  var tabVideoai = document.getElementById("tab-videoai");
   var tabHistory = document.getElementById("tab-history");
   var tabFoto = document.getElementById("tab-foto");
   var tabSklarne = document.getElementById("tab-sklarne");
   var viewVideos = document.getElementById("view-videos");
+  var viewVideoai = document.getElementById("view-videoai");
   var viewHistory = document.getElementById("view-history");
   var viewFoto = document.getElementById("view-foto");
   var viewSklarne = document.getElementById("view-sklarne");
@@ -1461,9 +1509,9 @@
   var tabSwitching = false;
   var currentTab = "foto";
 
-  var TAB_BTN = {videos:tabVideos, history:tabHistory, foto:tabFoto, sklarne:tabSklarne};
-  var TAB_VIEW = {videos:viewVideos, history:viewHistory, foto:viewFoto, sklarne:viewSklarne};
-  var TAB_ORDER = ["videos", "history", "foto", "sklarne"];
+  var TAB_BTN = {videos:tabVideos, videoai:tabVideoai, history:tabHistory, foto:tabFoto, sklarne:tabSklarne};
+  var TAB_VIEW = {videos:viewVideos, videoai:viewVideoai, history:viewHistory, foto:viewFoto, sklarne:viewSklarne};
+  var TAB_ORDER = ["videos", "videoai", "history", "foto", "sklarne"];
 
   function showTab(which){
     if (tabSwitching || which === currentTab || !TAB_VIEW[which]) return;
@@ -1484,6 +1532,7 @@
 
     if (which === "foto") ensureFotoRendered();
     if (which === "sklarne") ensureSklRendered();
+    if (which === "videoai") ensureVideoaiRendered();
 
     if (reduceMotion) {
       fromEl.hidden = true;
@@ -1531,6 +1580,7 @@
     showTab(which);
   }
   tabVideos.addEventListener("click", function(){ goToTab("videos"); });
+  tabVideoai.addEventListener("click", function(){ goToTab("videoai"); });
   tabHistory.addEventListener("click", function(){ goToTab("history"); });
   tabFoto.addEventListener("click", function(){ goToTab("foto"); });
   tabSklarne.addEventListener("click", function(){ goToTab("sklarne"); });
@@ -1878,6 +1928,8 @@
       buildSklChips();
       renderSkl();
     }
+
+    if (videoaiRendered) renderVideoai();
   }
 
   (function(){
