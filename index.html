@@ -1395,8 +1395,14 @@
     vpIframe = fresh;
     vpIframe.hidden = true;
     vpVideo.hidden = false;
+    // iOS Safari vie po zmene .src cez JS zostať v "zaseknutom" stave (ikona
+    // preškrtnutého prehrávania), ak sa hneď nezavolá explicitné .load() a ak
+    // sa currentTime nastavuje skôr, než je načítaný aspoň 1 frame metadát.
+    vpVideo.pause();
+    vpVideo.removeAttribute("src");
+    vpVideo.load();
     vpVideo.src = url;
-    vpVideo.currentTime = 0;
+    vpVideo.load();
     vpVideo.play().catch(function(){});
     vpTitle.textContent = title || "";
     // Súborové video nemá vlastnú stránku na YouTube, tak odkaz "Otvoriť v YouTube appke" schováme.
