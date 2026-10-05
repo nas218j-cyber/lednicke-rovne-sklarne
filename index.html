@@ -1254,7 +1254,7 @@
       var fileUrl = aiVideoUrl(v.file);
       return (
         '<a class="card card-ai" href="#" rel="noopener" data-title="' + v.title.toLowerCase() + '" data-video-file="' + fileUrl + '" data-video-title="' + v.title.replace(/"/g, "&quot;") + '">' +
-          '<span class="ai-thumb"><video src="' + fileUrl + '" muted autoplay loop playsinline preload="metadata"></video><span class="ai-badge">' + playIcon() + '</span></span>' +
+          '<span class="ai-thumb"><video data-src="' + fileUrl + '" muted playsinline preload="none"></video><span class="ai-badge">' + playIcon() + '</span></span>' +
           '<span class="body">' +
             '<span class="title">' + v.title + '</span>' +
             '<span class="meta">' + (v.dur ? '<span>' + v.dur + '</span>' : "") + '<span>živá fotka</span></span>' +
@@ -1545,6 +1545,33 @@
       });
     }
     videoaiEmptyEl.classList.toggle("show", items.length === 0);
+    setupVideoaiLazyAutoplay();
+  }
+
+  // Nahlivove videa v "Ozivene Foto" sa prehravaju (autoplay loop) len kym su skutocne
+  // vidno na obrazovke - predtym sa pri otvoreni zalozky spustilo naraz VSETKYCH videi
+  // z aktivneho albumu (aj desiatky), co pretazilo prehliadac (najma na mobile) a sposobovalo
+  // zamrzanie / nespolahlive nacitanie. IntersectionObserver zabezpeci, ze sa stahuje a prehrava
+  // vzdy len par videi, ktore su prave v zornom poli.
+  var videoaiAutoplayObserver = null;
+  function setupVideoaiLazyAutoplay(){
+    if (videoaiAutoplayObserver) videoaiAutoplayObserver.disconnect();
+    if (!("IntersectionObserver" in window)) return;
+    videoaiAutoplayObserver = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var video = entry.target;
+        if (entry.isIntersecting){
+          if (!video.getAttribute("src") && video.dataset.src) video.src = video.dataset.src;
+          video.loop = true;
+          var playPromise = video.play();
+          if (playPromise && playPromise.catch) playPromise.catch(function(){});
+        } else {
+          video.pause();
+        }
+      });
+    }, { root: null, rootMargin: "150px", threshold: 0.25 });
+    var videos = videoaiSectionsEl.querySelectorAll(".ai-thumb video[data-src]");
+    Array.prototype.forEach.call(videos, function(v){ videoaiAutoplayObserver.observe(v); });
   }
 
   function ensureVideoaiRendered(){
