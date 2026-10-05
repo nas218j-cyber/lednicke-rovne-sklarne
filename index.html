@@ -969,6 +969,7 @@
     </div>
 
     <div id="view-videoai" hidden>
+      <div class="chips" id="videoai-chips" role="group" aria-label="Filter podľa albumu"></div>
       <div id="videoai-sections"></div>
       <p class="empty" id="videoai-empty">Zatiaľ žiadne AI videá.</p>
     </div>
@@ -1208,7 +1209,8 @@
 
   var SECTION_META = {"history":{"title":"Archívne zábery","note":"Dobové natáčanie sklární a sklárskych sympózií, 1965 – 2000."},"portraits":{"title":"Sklárski majstri","note":"Portréty fúkačov, dizájnérov a ocenených remeselníkov."},"tv":{"title":"TV reportáže","note":"Relácie RTVS, Markíza a ČT o sklárňach v Lednických Rovniach."},"foto":{"title":"Video foto","note":"Retro fotografie obce a sklárne spracované do videa."},"obec":{"title":"Obec","note":"Lednické Rovne – park, rekonštrukcia."},"skola":{"title":"SOŠ · tvarovanie skla","note":"Zábery ručného tvarovania skla zo strednej odbornej školy."},"reklamy":{"title":"Reklamy","note":"Reklamné a propagačné spoty RONA a sklární Lednické Rovne."},"prerabka-namestia":{"title":"Rekonštrukcia námestia","note":"Rekonštrukcia námestia a jeho okolia v Lednických Rovniach."},"videa-ai":{"title":"Videá AI","note":"Krátke AI videá oživujúce staré fotografie — zatiaľ 1. máj."}};
 
-  var VIDEOS = [{"id":"iEqnZ2Gp6e8","title":"Eduard Schreiber – Lednické Rovne – prvý slovenský hraný film","cat":"history","year":"1910","views":"17","dur":"26:36"},{"id":"FNw9rCVafbI","title":"Lednické Rovne 1965 – Sklárne","cat":"history","year":"1965","views":"400","dur":"1:46"},{"id":"opD7yDxPhbs","title":"Skláreň v Lednických Rovniach – 1972","cat":"history","year":"1972","views":"237","dur":"1:24"},{"id":"qOX2qACFfqU","title":"Lednické Rovne – sklárne 1976 (Po meči a po praslici)","cat":"history","year":"1976","views":"2,8 tis.","dur":"28:35"},{"id":"ksL0yDSrL10","title":"Skláreň Lednické Rovne – ČT24, 1982","cat":"history","year":"1982","views":"108","dur":"0:37"},{"id":"ByVzyYEXP-c","title":"Matelko – Sklo Lednické Rovne 1989","cat":"history","year":"1989","views":"3,5 tis.","dur":"29:28"},{"id":"HZhp4YyK8ug","title":"Sklárne Lednické Rovne 1992 – 100 rokov","cat":"history","year":"1992","views":"532","dur":"14:48"},{"id":"WIyZn4W010c","title":"Sympózium 1994","cat":"history","year":"1994","views":"943","dur":"9:04"},{"id":"w2a7IhIMTJU","title":"Slovensko naše – medzinárodné sklárske sympózium (STV, 1996)","cat":"history","year":"1996","views":"917","dur":"29:09"},{"id":"6xxGpCEh3e0","title":"Sklárne Lednické Rovne – Sympózium 1998","cat":"history","year":"1998","views":"248","dur":"1:20:42"},{"id":"46I71t3YrR0","title":"Sklárske sympózium 2000 – Lednické Rovne","cat":"history","year":"2000","views":"711","dur":"48:55"},{"id":"FOfwUej-MAU","title":"Sklárne Lednické Rovne – Drobček 80'","cat":"history","year":"výročie","views":"1,2 tis.","dur":"10:43"},{"id":"L8kx8I-ubck","title":"Skláreň Lednické Rovne – Hološko, Taraba","cat":"portraits","views":"90","dur":"1:20"},{"id":"hFSCZskIvSY","title":"Jaroslav Taraba – sklársky dizajnér","cat":"portraits","views":"78","dur":"1:53"},{"id":"6dDtVO7jEHU","title":"Skláreň – RONA – LR Crystal – Hryc-Čálik","cat":"portraits","views":"267","dur":"6:17"},{"id":"t0MKTsER9Tg","title":"Skláreň RONA Lednické Rovne – Kramár","cat":"portraits","views":"890","dur":"9:53"},{"id":"yR9FWYHgBb4","title":"Rona – skláreň – Ocenenie NCD21 – Patrik Illo","cat":"portraits","views":"163","dur":"2:50"},{"id":"03A1aUl6R1E","title":"NCD 2009 – Zvláštna cena ministra hospodárstva SR (Rona)","cat":"portraits","year":"2009","views":"53","dur":"1:58"},{"id":"6J2qAsd3Rjk","title":"RTVS – Slovensko v obrazoch: skláreň Rona","cat":"tv","views":"621","dur":"6:53"},{"id":"LT5AddIFrZc","title":"S úsmevom po Slovensku – skláreň RONA a.s.","cat":"tv","views":"1,3 tis.","dur":"6:16"},{"id":"4TABXzt37rM","title":"Vyrobené na Slovensku","cat":"tv","views":"569","dur":"7:02"},{"id":"HhY7-5WSYzM","title":"RONA – skláreň 2024, RTVS Regina","cat":"tv","year":"2024","views":"471","dur":"3:43"},{"id":"oSwuy7x69ZE","title":"Lednické Rovne – skláreň – retro foto","cat":"foto","views":"2,1 tis.","dur":"27:23"},{"id":"eYpX8oizSaY","title":"Lednické Rovne – retro foto 1. máj","cat":"foto","views":"1,6 tis.","dur":"17:11"},{"id":"Mp9L37lHBXU","title":"Lednické Rovne – retro foto","cat":"foto","views":"1,4 tis.","dur":"27:41"},{"id":"RveSlK7oFxs","title":"RTVS – Slovensko v obrazoch: park Lednické Rovne","cat":"obec","views":"364","dur":"6:05"},{"id":"lVKpHYmGBxQ","title":"Park Lednické Rovne pred rekonštrukciou – Markíza","cat":"obec","views":"249","dur":"2:21"},{"id":"YjhAYP1hhbA","title":"Park Lednické Rovne po rekonštrukcii – Markíza","cat":"obec","views":"187","dur":"2:13"},{"id":"nziFK6iujyI","title":"RTVS – obnovený park v Lednických Rovniach","cat":"obec","views":"51","dur":"2:03"},{"id":"QGYtU1UV0vQ","title":"Lednické Rovne – rekonštrukcia pred OÚ","cat":"prerabka-namestia","views":"405","dur":"5:09"},{"id":"T_nfd_Xssbc","title":"Lednické Rovne – Kruhový objazd","cat":"prerabka-namestia","views":"1,8 tis.","dur":"4:59"},{"id":"yhHZv5cyk3w","title":"Lednické Rovne – autobusová zastávka","cat":"prerabka-namestia","views":"645","dur":"5:17"},{"id":"kEpdeq_bGY8","title":"Lednicke Rovne RONA","cat":"obec","views":"4","dur":"2:13"},{"id":"vJemirJgxAQ","title":"Lednické Rovne - konvoj VB","cat":"obec","views":"4","dur":"1:31"},{"id":"U1E5E7JkK-w","title":"Lednické Rovne SOŠ – deň otvorených dverí","cat":"skola","views":"68","dur":"3:42"},{"id":"Vkkpx7-Kg_0","title":"Lednické Rovne SOŠ – tvarovanie vázy","cat":"skola","views":"49","dur":"16:39"},{"id":"i50Gi0LlPJ0","title":"Lednické Rovne SOŠ – tvarovaný svietnik","cat":"skola","views":"47","dur":"17:12"},{"id":"YSWVe7pOR7E","title":"Lednické Rovne SOŠ – tvarovaný svietnik 2","cat":"skola","views":"49","dur":"2:46"},{"id":"XkScP07xqJA","title":"Lednické Rovne SOŠ – tvarovanie džbána","cat":"skola","views":"77","dur":"9:10"},{"id":"s4OeCSCPEis","title":"Sklárstvo v úpadku","cat":"skola","views":"4","dur":"3:42"},{"id":"1qLO_9yaXR4","title":"SOŠ sklárska","cat":"skola","views":"2","dur":"0:30"},{"id":"sxca2BfCmpg","title":"SOŠ sklárska Lednické Rovne - brusič","cat":"skola","views":"3","dur":"6:36"},{"id":"_3_hwiR5Aq0","title":"SOŠ sklárska Lednické Rovne - dizajnér","cat":"skola","views":"4","dur":"7:41"},{"id":"hK4RklsGY1I","title":"SOŠ sklárska Lednické Rovne - brusič 2","cat":"skola","views":"3","dur":"6:18"},{"id":"zdSJKVaqp_M","title":"Oslávme slovenskú tradíciu I RONA poháre I Lidl 2019","cat":"reklamy","views":"8","dur":"0:46"},{"id":"KUtrQM8xDyA","title":"Lidl - reklama Fragile","cat":"reklamy","views":"3","dur":"0:46"},{"id":"sElYeN7QJI0","title":"Lidl - Sklár","cat":"reklamy","views":"2","dur":"0:41"},{"id":"2X7233fNI0I","title":"RONA - Ballet collection","cat":"reklamy","views":"4","dur":"0:55"},{"id":"1z6tqQASRhc","title":"RONA - Glassware 2014","cat":"reklamy","views":"4","dur":"13:04"},{"id":"rknR6dtRQ-g","title":"RONA - Shape your wine, RONA 5 star glass","cat":"reklamy","views":"3","dur":"3:27"},{"id":"7qDdg647b8I","title":"RONA - Irresistibly resistant, making of backstage, RONA 5 star glass","cat":"reklamy","views":"2","dur":"2:15"},{"id":"o2mqx1eLXzc","title":"RONA - Irresistibly resistant, new series Ballet, RONA 5 star glass","cat":"reklamy","views":"2","dur":"0:45"},{"file":"videos-ai/1.mp4","title":"1. máj — AI video 1","cat":"videa-ai","dur":"0:05"},{"file":"videos-ai/2.mp4","title":"1. máj — AI video 2","cat":"videa-ai","dur":"0:10"}];
+  var VIDEOS = [{"id":"iEqnZ2Gp6e8","title":"Eduard Schreiber – Lednické Rovne – prvý slovenský hraný film","cat":"history","year":"1910","views":"17","dur":"26:36"},{"id":"FNw9rCVafbI","title":"Lednické Rovne 1965 – Sklárne","cat":"history","year":"1965","views":"400","dur":"1:46"},{"id":"opD7yDxPhbs","title":"Skláreň v Lednických Rovniach – 1972","cat":"history","year":"1972","views":"237","dur":"1:24"},{"id":"qOX2qACFfqU","title":"Lednické Rovne – sklárne 1976 (Po meči a po praslici)","cat":"history","year":"1976","views":"2,8 tis.","dur":"28:35"},{"id":"ksL0yDSrL10","title":"Skláreň Lednické Rovne – ČT24, 1982","cat":"history","year":"1982","views":"108","dur":"0:37"},{"id":"ByVzyYEXP-c","title":"Matelko – Sklo Lednické Rovne 1989","cat":"history","year":"1989","views":"3,5 tis.","dur":"29:28"},{"id":"HZhp4YyK8ug","title":"Sklárne Lednické Rovne 1992 – 100 rokov","cat":"history","year":"1992","views":"532","dur":"14:48"},{"id":"WIyZn4W010c","title":"Sympózium 1994","cat":"history","year":"1994","views":"943","dur":"9:04"},{"id":"w2a7IhIMTJU","title":"Slovensko naše – medzinárodné sklárske sympózium (STV, 1996)","cat":"history","year":"1996","views":"917","dur":"29:09"},{"id":"6xxGpCEh3e0","title":"Sklárne Lednické Rovne – Sympózium 1998","cat":"history","year":"1998","views":"248","dur":"1:20:42"},{"id":"46I71t3YrR0","title":"Sklárske sympózium 2000 – Lednické Rovne","cat":"history","year":"2000","views":"711","dur":"48:55"},{"id":"FOfwUej-MAU","title":"Sklárne Lednické Rovne – Drobček 80'","cat":"history","year":"výročie","views":"1,2 tis.","dur":"10:43"},{"id":"L8kx8I-ubck","title":"Skláreň Lednické Rovne – Hološko, Taraba","cat":"portraits","views":"90","dur":"1:20"},{"id":"hFSCZskIvSY","title":"Jaroslav Taraba – sklársky dizajnér","cat":"portraits","views":"78","dur":"1:53"},{"id":"6dDtVO7jEHU","title":"Skláreň – RONA – LR Crystal – Hryc-Čálik","cat":"portraits","views":"267","dur":"6:17"},{"id":"t0MKTsER9Tg","title":"Skláreň RONA Lednické Rovne – Kramár","cat":"portraits","views":"890","dur":"9:53"},{"id":"yR9FWYHgBb4","title":"Rona – skláreň – Ocenenie NCD21 – Patrik Illo","cat":"portraits","views":"163","dur":"2:50"},{"id":"03A1aUl6R1E","title":"NCD 2009 – Zvláštna cena ministra hospodárstva SR (Rona)","cat":"portraits","year":"2009","views":"53","dur":"1:58"},{"id":"6J2qAsd3Rjk","title":"RTVS – Slovensko v obrazoch: skláreň Rona","cat":"tv","views":"621","dur":"6:53"},{"id":"LT5AddIFrZc","title":"S úsmevom po Slovensku – skláreň RONA a.s.","cat":"tv","views":"1,3 tis.","dur":"6:16"},{"id":"4TABXzt37rM","title":"Vyrobené na Slovensku","cat":"tv","views":"569","dur":"7:02"},{"id":"HhY7-5WSYzM","title":"RONA – skláreň 2024, RTVS Regina","cat":"tv","year":"2024","views":"471","dur":"3:43"},{"id":"oSwuy7x69ZE","title":"Lednické Rovne – skláreň – retro foto","cat":"foto","views":"2,1 tis.","dur":"27:23"},{"id":"eYpX8oizSaY","title":"Lednické Rovne – retro foto 1. máj","cat":"foto","views":"1,6 tis.","dur":"17:11"},{"id":"Mp9L37lHBXU","title":"Lednické Rovne – retro foto","cat":"foto","views":"1,4 tis.","dur":"27:41"},{"id":"RveSlK7oFxs","title":"RTVS – Slovensko v obrazoch: park Lednické Rovne","cat":"obec","views":"364","dur":"6:05"},{"id":"lVKpHYmGBxQ","title":"Park Lednické Rovne pred rekonštrukciou – Markíza","cat":"obec","views":"249","dur":"2:21"},{"id":"YjhAYP1hhbA","title":"Park Lednické Rovne po rekonštrukcii – Markíza","cat":"obec","views":"187","dur":"2:13"},{"id":"nziFK6iujyI","title":"RTVS – obnovený park v Lednických Rovniach","cat":"obec","views":"51","dur":"2:03"},{"id":"QGYtU1UV0vQ","title":"Lednické Rovne – rekonštrukcia pred OÚ","cat":"prerabka-namestia","views":"405","dur":"5:09"},{"id":"T_nfd_Xssbc","title":"Lednické Rovne – Kruhový objazd","cat":"prerabka-namestia","views":"1,8 tis.","dur":"4:59"},{"id":"yhHZv5cyk3w","title":"Lednické Rovne – autobusová zastávka","cat":"prerabka-namestia","views":"645","dur":"5:17"},{"id":"kEpdeq_bGY8","title":"Lednicke Rovne RONA","cat":"obec","views":"4","dur":"2:13"},{"id":"vJemirJgxAQ","title":"Lednické Rovne - konvoj VB","cat":"obec","views":"4","dur":"1:31"},{"id":"U1E5E7JkK-w","title":"Lednické Rovne SOŠ – deň otvorených dverí","cat":"skola","views":"68","dur":"3:42"},{"id":"Vkkpx7-Kg_0","title":"Lednické Rovne SOŠ – tvarovanie vázy","cat":"skola","views":"49","dur":"16:39"},{"id":"i50Gi0LlPJ0","title":"Lednické Rovne SOŠ – tvarovaný svietnik","cat":"skola","views":"47","dur":"17:12"},{"id":"YSWVe7pOR7E","title":"Lednické Rovne SOŠ – tvarovaný svietnik 2","cat":"skola","views":"49","dur":"2:46"},{"id":"XkScP07xqJA","title":"Lednické Rovne SOŠ – tvarovanie džbána","cat":"skola","views":"77","dur":"9:10"},{"id":"s4OeCSCPEis","title":"Sklárstvo v úpadku","cat":"skola","views":"4","dur":"3:42"},{"id":"1qLO_9yaXR4","title":"SOŠ sklárska","cat":"skola","views":"2","dur":"0:30"},{"id":"sxca2BfCmpg","title":"SOŠ sklárska Lednické Rovne - brusič","cat":"skola","views":"3","dur":"6:36"},{"id":"_3_hwiR5Aq0","title":"SOŠ sklárska Lednické Rovne - dizajnér","cat":"skola","views":"4","dur":"7:41"},{"id":"hK4RklsGY1I","title":"SOŠ sklárska Lednické Rovne - brusič 2","cat":"skola","views":"3","dur":"6:18"},{"id":"zdSJKVaqp_M","title":"Oslávme slovenskú tradíciu I RONA poháre I Lidl 2019","cat":"reklamy","views":"8","dur":"0:46"},{"id":"KUtrQM8xDyA","title":"Lidl - reklama Fragile","cat":"reklamy","views":"3","dur":"0:46"},{"id":"sElYeN7QJI0","title":"Lidl - Sklár","cat":"reklamy","views":"2","dur":"0:41"},{"id":"2X7233fNI0I","title":"RONA - Ballet collection","cat":"reklamy","views":"4","dur":"0:55"},{"id":"1z6tqQASRhc","title":"RONA - Glassware 2014","cat":"reklamy","views":"4","dur":"13:04"},{"id":"rknR6dtRQ-g","title":"RONA - Shape your wine, RONA 5 star glass","cat":"reklamy","views":"3","dur":"3:27"},{"id":"7qDdg647b8I","title":"RONA - Irresistibly resistant, making of backstage, RONA 5 star glass","cat":"reklamy","views":"2","dur":"2:15"},{"id":"o2mqx1eLXzc","title":"RONA - Irresistibly resistant, new series Ballet, RONA 5 star glass","cat":"reklamy","views":"2","dur":"0:45"},{"file":"videos-ai/1.mp4","title":"1. máj — AI video 1","cat":"videa-ai","dur":"0:05","sub":"1maj"},{"file":"videos-ai/2.mp4","title":"1. máj — AI video 2","cat":"videa-ai","dur":"0:10","sub":"1maj"}];
+  var VIDEOAI_CATS = [{"id":"1maj","label":"1. máj"}];
 
   var PHOTO_CATS = [{"id":"1maj","label":"1.máj na LR","count":170},{"id":"brigady","label":"Brigády","count":13},{"id":"haj","label":"Háj","count":30},{"id":"historicke-foto","label":"Historické foto","count":224},{"id":"kniha","label":"Kniha o LR","count":85},{"id":"kostol","label":"Kostol+kaplnka","count":52},{"id":"letec","label":"Letec A.Vanko","count":5},{"id":"majer","label":"Majer","count":13},{"id":"mixlr","label":"MIX LR","count":30},{"id":"muzikanti","label":"Muzikanti","count":105},{"id":"park","label":"Park","count":348},{"id":"pohlady","label":"Pohľady na LR","count":181},{"id":"polovnici","label":"Poľovníci a záhradkári","count":22},{"id":"prerabka-namestia","label":"Rekonštrukcia námestia","count":169},{"id":"skolaci","label":"Školáci na LR","count":115},{"id":"sport","label":"Šport","count":237},{"id":"suhradka","label":"Súhradka","count":13},{"id":"zajazdy","label":"Zájazdy","count":19}];
 
@@ -1484,20 +1486,63 @@
   // --- Videá AI: samostatná záložka (bez kategórií/chips) — jednoduchý zoznam kariet AI videí ---
   var videoaiSectionsEl = document.getElementById("videoai-sections");
   var videoaiEmptyEl = document.getElementById("videoai-empty");
+  var videoaiChipsEl = document.getElementById("videoai-chips");
   var videoaiRendered = false;
+  var activeVideoaiCat = "vsetky";
+
+  function videoaiCatLabel(id){
+    for (var i = 0; i < VIDEOAI_CATS.length; i++){
+      if (VIDEOAI_CATS[i].id === id) return VIDEOAI_CATS[i].label;
+    }
+    return id;
+  }
+
+  function buildVideoaiChips(){
+    function makeChip(id, label){
+      var b = document.createElement("button");
+      b.className = "chip";
+      b.type = "button";
+      b.textContent = label;
+      b.setAttribute("aria-pressed", id === activeVideoaiCat ? "true" : "false");
+      b.addEventListener("click", function(){
+        activeVideoaiCat = id;
+        Array.prototype.forEach.call(videoaiChipsEl.children, function(ch){
+          ch.setAttribute("aria-pressed", ch === b ? "true" : "false");
+        });
+        renderVideoai();
+      });
+      return b;
+    }
+    videoaiChipsEl.appendChild(makeChip("vsetky", "Všetky"));
+    VIDEOAI_CATS.forEach(function(c){
+      videoaiChipsEl.appendChild(makeChip(c.id, c.label));
+    });
+  }
 
   function renderVideoai(){
     videoaiSectionsEl.innerHTML = "";
-    var items = VIDEOS.filter(function(v){ return v.cat === "videa-ai"; });
+    var items = VIDEOS.filter(function(v){
+      if (v.cat !== "videa-ai") return false;
+      if (activeVideoaiCat !== "vsetky" && v.sub !== activeVideoaiCat) return false;
+      return true;
+    });
     if (items.length){
-      var meta = SECTION_META["videa-ai"] || {title:"Videá AI", note:""};
-      var sec = document.createElement("section");
-      sec.className = "section";
-      sec.innerHTML =
-        '<div class="section-head"><h2>' + meta.title + '</h2><span class="count">' + items.length + '</span></div>' +
-        (meta.note ? '<p class="section-note">' + meta.note + '</p>' : '') +
-        '<div class="list">' + items.map(cardHtml).join("") + '</div>';
-      videoaiSectionsEl.appendChild(sec);
+      // Zoskupíme do albumov (podpriečinkov) podľa v.sub, v poradí VIDEOAI_CATS;
+      // video bez rozpoznaného albumu (napr. staré dáta bez "sub") pôjde na koniec.
+      var subIds = VIDEOAI_CATS.map(function(c){ return c.id; });
+      items.forEach(function(v){
+        if (v.sub && subIds.indexOf(v.sub) === -1) subIds.push(v.sub);
+      });
+      subIds.forEach(function(subId){
+        var subItems = items.filter(function(v){ return v.sub === subId; });
+        if (!subItems.length) return;
+        var sec = document.createElement("section");
+        sec.className = "section";
+        sec.innerHTML =
+          '<div class="section-head"><h2>' + videoaiCatLabel(subId) + '</h2><span class="count">' + subItems.length + '</span></div>' +
+          '<div class="list">' + subItems.map(cardHtml).join("") + '</div>';
+        videoaiSectionsEl.appendChild(sec);
+      });
     }
     videoaiEmptyEl.classList.toggle("show", items.length === 0);
   }
@@ -1505,6 +1550,7 @@
   function ensureVideoaiRendered(){
     if (videoaiRendered) return;
     videoaiRendered = true;
+    buildVideoaiChips();
     renderVideoai();
   }
 
@@ -1946,6 +1992,7 @@
     PHOTOS.length = 0; Array.prototype.push.apply(PHOTOS, data.PHOTOS || []);
     SKL_CATS.length = 0; Array.prototype.push.apply(SKL_CATS, data.SKL_CATS || []);
     SKL_PHOTOS.length = 0; Array.prototype.push.apply(SKL_PHOTOS, data.SKL_PHOTOS || []);
+    VIDEOAI_CATS.length = 0; Array.prototype.push.apply(VIDEOAI_CATS, data.VIDEOAI_CATS || []);
 
     chipsEl.innerHTML = "";
     buildChips();
@@ -1965,7 +2012,12 @@
       renderSkl();
     }
 
-    if (videoaiRendered) renderVideoai();
+    if (videoaiRendered){
+      activeVideoaiCat = "vsetky";
+      videoaiChipsEl.innerHTML = "";
+      buildVideoaiChips();
+      renderVideoai();
+    }
   }
 
   (function(){
