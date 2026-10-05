@@ -1731,8 +1731,8 @@
     var name = encodeURIComponent(encodeURIComponent(p) + ".jpg");
     return "https://cdn.jsdelivr.net/gh/" + PHOTOS_REPO + "@" + PHOTOS_REF + "/" + folder + "/" + name;
   }
-  function photoThumb(p){ return "https://wsrv.nl/?url=" + encodeURIComponent(photosRepoUrl(p, "thumb")) + "&w=320&q=75&output=webp"; }
-  function photoFull(p){ return "https://wsrv.nl/?url=" + encodeURIComponent(photosRepoUrl(p, "full")) + "&w=1600&q=82&output=webp"; }
+  function photoThumb(p){ return photosRepoUrl(p, "thumb"); }
+  function photoFull(p){ return photosRepoUrl(p, "full"); }
 
   // AI videá (krátke tiché slučky z fotiek) - hostované v tom istom fotorepozitári ako fotky,
   // priamo cez jsDelivr (bez wsrv, súbory sú malé a netreba ich transformovať).
