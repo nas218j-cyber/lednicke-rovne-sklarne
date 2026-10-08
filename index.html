@@ -1701,7 +1701,7 @@
   var fotoQEl = document.getElementById("foto-q");
   var activeFotoCat = "vsetky";
   var fotoRendered = false;
-  var FOTO_PAGE_SIZE = 60;
+  var FOTO_PAGE_SIZE = 24;
   var fotoFilteredFlat = [];
   var fotoRenderedCount = 0;
 
@@ -1826,6 +1826,7 @@
         var img = document.createElement("img");
         img.loading = "lazy";
         img.decoding = "async";
+        img.fetchPriority = "low";
         img.src = photoThumb(ph.p);
         img.alt = ph.c || fotoCatLabel(ph.cat);
         btn.appendChild(img);
@@ -1956,6 +1957,7 @@
         var img = document.createElement("img");
         img.loading = "lazy";
         img.decoding = "async";
+        img.fetchPriority = "low";
         img.src = photoThumb(ph.p);
         img.alt = ph.c || fotoCatLabel(ph.cat);
         btn.appendChild(img);
@@ -2366,6 +2368,7 @@
       var img = document.createElement("img");
       img.loading = "lazy";
       img.decoding = "async";
+      img.fetchPriority = "low";
       img.src = photoThumb(ph.p);
       img.alt = ph.c || fotoCatLabel(ph.cat);
       btn.appendChild(img);
