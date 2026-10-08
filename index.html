@@ -13,6 +13,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,440;9..144,560;9..144,650&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
   :root{
@@ -1760,7 +1762,7 @@
             photoLazyObserver.unobserve(img);
           }
         });
-      }, { root: null, rootMargin: "200px", threshold: 0.01 });
+      }, { root: null, rootMargin: "600px", threshold: 0.01 });
     }
     var lazyImgs = document.querySelectorAll("img[data-src]");
     Array.prototype.forEach.call(lazyImgs, function(img){ photoLazyObserver.observe(img); });
