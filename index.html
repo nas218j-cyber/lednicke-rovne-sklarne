@@ -1734,6 +1734,28 @@
   function photoThumb(p){ return photosRepoUrl(p, "thumb"); }
   function photoFull(p){ return photosRepoUrl(p, "full"); }
 
+  var photoLazyObserver = null;
+  function setupPhotoLazyLoad(){
+    if (!("IntersectionObserver" in window)) {
+      var allImgs = document.querySelectorAll("img[data-src]");
+      Array.prototype.forEach.call(allImgs, function(img){ img.src = img.dataset.src; img.removeAttribute("data-src"); });
+      return;
+    }
+    if (!photoLazyObserver){
+      photoLazyObserver = new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){
+          if (entry.isIntersecting){
+            var img = entry.target;
+            if (img.dataset.src){ img.src = img.dataset.src; img.removeAttribute("data-src"); }
+            photoLazyObserver.unobserve(img);
+          }
+        });
+      }, { root: null, rootMargin: "200px", threshold: 0.01 });
+    }
+    var lazyImgs = document.querySelectorAll("img[data-src]");
+    Array.prototype.forEach.call(lazyImgs, function(img){ photoLazyObserver.observe(img); });
+  }
+
   // AI videá (krátke tiché slučky z fotiek) - hostované v tom istom fotorepozitári ako fotky,
   // priamo cez jsDelivr (bez wsrv, súbory sú malé a netreba ich transformovať).
   function aiVideoUrl(file){ return "https://cdn.jsdelivr.net/gh/" + PHOTOS_REPO + "@" + PHOTOS_REF + "/" + file; }
@@ -1827,7 +1849,7 @@
         img.loading = "lazy";
         img.decoding = "async";
         img.fetchPriority = "low";
-        img.src = photoThumb(ph.p);
+        img.dataset.src = photoThumb(ph.p);
         img.alt = ph.c || fotoCatLabel(ph.cat);
         btn.appendChild(img);
         btn.addEventListener("click", function(){
@@ -1837,6 +1859,7 @@
       })(fotoFilteredFlat[i]);
     }
     fotoRenderedCount = end;
+    setupPhotoLazyLoad();
 
     var fotoTotalByCat = {};
     fotoFilteredFlat.forEach(function(ph){ fotoTotalByCat[ph.cat] = (fotoTotalByCat[ph.cat] || 0) + 1; });
@@ -1882,7 +1905,7 @@
   var sklQEl = document.getElementById("sklarne-q");
   var activeSklCat = "vsetky";
   var sklRendered = false;
-  var SKL_PAGE_SIZE = 60;
+  var SKL_PAGE_SIZE = 24;
   var sklFilteredFlat = [];
   var sklRenderedCount = 0;
 
@@ -1958,7 +1981,7 @@
         img.loading = "lazy";
         img.decoding = "async";
         img.fetchPriority = "low";
-        img.src = photoThumb(ph.p);
+        img.dataset.src = photoThumb(ph.p);
         img.alt = ph.c || fotoCatLabel(ph.cat);
         btn.appendChild(img);
         btn.addEventListener("click", function(){
@@ -1968,6 +1991,7 @@
       })(sklFilteredFlat[i]);
     }
     sklRenderedCount = end;
+    setupPhotoLazyLoad();
 
     var sklTotalByCat = {};
     sklFilteredFlat.forEach(function(ph){ sklTotalByCat[ph.cat] = (sklTotalByCat[ph.cat] || 0) + 1; });
