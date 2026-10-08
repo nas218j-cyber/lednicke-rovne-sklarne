@@ -628,6 +628,14 @@
     background:rgba(255,255,255,.12); color:#fff9f2;
     font-size:13.5px; font-weight:600; cursor:pointer; flex:none;
   }
+  .video-player .vp-right{display:flex; align-items:center; gap:8px;}
+  .video-player .vp-tool{
+    width:36px; height:36px; border-radius:50%; border:0;
+    background:rgba(255,255,255,.12); color:#fff9f2;
+    font-size:18px; line-height:1; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; flex:none;
+  }
+  .video-player .vp-tool[hidden]{display:none;}
   .video-player .vp-external{
     height:36px; padding:0 14px; border-radius:18px;
     background:rgba(255,255,255,.12); color:#fff9f2;
@@ -1179,7 +1187,10 @@
   <div class="video-player" id="video-player" hidden>
     <div class="vp-top">
       <button class="vp-back" id="vp-back" type="button" aria-label="Späť">‹ Späť</button>
-      <a class="vp-external" id="vp-external" href="#" target="_blank" rel="noopener" aria-label="Otvoriť v YouTube appke">Otvoriť v YouTube</a>
+      <div class="vp-right">
+        <button class="vp-tool" id="vp-share" type="button" aria-label="Zdieľať video" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
+        <a class="vp-external" id="vp-external" href="#" target="_blank" rel="noopener" aria-label="Otvoriť v YouTube appke">Otvoriť v YouTube</a>
+      </div>
     </div>
     <div class="vp-body">
       <div class="vp-frame-wrap">
@@ -1321,6 +1332,8 @@
   var vpVideo = document.getElementById("vp-video");
   var vpTitle = document.getElementById("vp-title");
   var vpExternal = document.getElementById("vp-external");
+  var vpShareBtn = document.getElementById("vp-share");
+  var currentPlayerFileUrl = null, currentPlayerFileTitle = "";
   var videoPlaySession = 0;
   var vpBack = document.getElementById("vp-back");
 
@@ -1384,6 +1397,11 @@
     vpTitle.textContent = title || "";
     vpExternal.hidden = false;
     vpExternal.href = "https://www.youtube.com/watch?v=" + encodeURIComponent(id);
+    // YouTube video nemá u nás hostovaný súbor na zdieľanie (len vnorený iframe) —
+    // tlačidlo Zdieľať je určené len pre súborové AI videá (pozri openPlayerFile).
+    currentPlayerFileUrl = null;
+    currentPlayerFileTitle = "";
+    vpShareBtn.hidden = true;
     videoPlayerEl.hidden = false;
     notifyAndroidPlayerState(true);
     requestWakeLock();
@@ -1411,6 +1429,9 @@
     vpTitle.textContent = title || "";
     // Súborové video nemá vlastnú stránku na YouTube, tak odkaz "Otvoriť v YouTube appke" schováme.
     vpExternal.hidden = true;
+    currentPlayerFileUrl = url;
+    currentPlayerFileTitle = title || "";
+    vpShareBtn.hidden = false;
     videoPlayerEl.hidden = false;
     notifyAndroidPlayerState(true);
     requestWakeLock();
@@ -1597,6 +1618,49 @@
   });
 
   vpBack.addEventListener("click", closePlayer);
+
+  // Zdieľanie súborového AI videa ("oživenej fotky") do iných appiek — rovnaký
+  // princíp ako lbSharePhoto() (fetch → base64 → natívny Android "Zdieľať" dialóg
+  // cez AndroidBridge.shareVideo, keď appka beží v Androide), s fallbackom na
+  // Web Share API / otvorenie v novej karte.
+  function vpShareVideo(){
+    if (!currentPlayerFileUrl) return;
+    var url = currentPlayerFileUrl;
+    var title = currentPlayerFileTitle || "Lednické Rovne a sklárne – oživená fotka";
+    var fileName = (url.split("/").pop() || "video.mp4").split("?")[0];
+
+    if (window.AndroidBridge && window.AndroidBridge.shareVideo) {
+      fetch(url).then(function(res){ return res.blob(); }).then(function(blob){
+        var reader = new FileReader();
+        reader.onloadend = function(){
+          var base64 = String(reader.result || "").split(",")[1] || "";
+          window.AndroidBridge.shareVideo(base64, fileName, title);
+        };
+        reader.onerror = function(){ window.open(url, "_blank"); };
+        reader.readAsDataURL(blob);
+      }).catch(function(){ window.open(url, "_blank"); });
+      return;
+    }
+
+    if (navigator.share) {
+      if (window.fetch) {
+        fetch(url).then(function(res){ return res.blob(); }).then(function(blob){
+          var file = (window.File) ? new File([blob], fileName, {type: blob.type || "video/mp4"}) : null;
+          if (file && navigator.canShare && navigator.canShare({files:[file]})) {
+            return navigator.share({files:[file], title: title});
+          }
+          return navigator.share({title: title, url: url});
+        }).catch(function(){
+          navigator.share({title: title, url: url}).catch(function(){ window.open(url, "_blank"); });
+        });
+      } else {
+        navigator.share({title: title, url: url}).catch(function(){ window.open(url, "_blank"); });
+      }
+    } else {
+      window.open(url, "_blank");
+    }
+  }
+  vpShareBtn.addEventListener("click", vpShareVideo);
   document.addEventListener("keydown", function(e){
     if (e.key === "Escape" && !videoPlayerEl.hidden) closePlayer();
   });
