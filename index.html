@@ -1735,10 +1735,20 @@
   function photoFull(p){ return photosRepoUrl(p, "full"); }
 
   var photoLazyObserver = null;
+  function photoImgRetry(img, url){
+    var attempt = 0;
+    img.onerror = function(){
+      attempt++;
+      if (attempt <= 3){
+        setTimeout(function(){ img.src = url + "?r=" + attempt; }, 1200 * attempt);
+      }
+    };
+    img.src = url;
+  }
   function setupPhotoLazyLoad(){
     if (!("IntersectionObserver" in window)) {
       var allImgs = document.querySelectorAll("img[data-src]");
-      Array.prototype.forEach.call(allImgs, function(img){ img.src = img.dataset.src; img.removeAttribute("data-src"); });
+      Array.prototype.forEach.call(allImgs, function(img){ photoImgRetry(img, img.dataset.src); img.removeAttribute("data-src"); });
       return;
     }
     if (!photoLazyObserver){
@@ -1746,7 +1756,7 @@
         entries.forEach(function(entry){
           if (entry.isIntersecting){
             var img = entry.target;
-            if (img.dataset.src){ img.src = img.dataset.src; img.removeAttribute("data-src"); }
+            if (img.dataset.src){ photoImgRetry(img, img.dataset.src); img.removeAttribute("data-src"); }
             photoLazyObserver.unobserve(img);
           }
         });
