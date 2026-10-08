@@ -1825,6 +1825,7 @@
         btn.className = "photo-thumb";
         var img = document.createElement("img");
         img.loading = "lazy";
+        img.decoding = "async";
         img.src = photoThumb(ph.p);
         img.alt = ph.c || fotoCatLabel(ph.cat);
         btn.appendChild(img);
@@ -1954,6 +1955,7 @@
         btn.className = "photo-thumb";
         var img = document.createElement("img");
         img.loading = "lazy";
+        img.decoding = "async";
         img.src = photoThumb(ph.p);
         img.alt = ph.c || fotoCatLabel(ph.cat);
         btn.appendChild(img);
@@ -2363,6 +2365,7 @@
       btn.className = "photo-thumb";
       var img = document.createElement("img");
       img.loading = "lazy";
+      img.decoding = "async";
       img.src = photoThumb(ph.p);
       img.alt = ph.c || fotoCatLabel(ph.cat);
       btn.appendChild(img);
