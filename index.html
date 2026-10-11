@@ -2519,6 +2519,23 @@
     globalSearchEmptyEl.classList.toggle("show", (videoMatches.length + fotoMatches.length + sklMatches.length) === 0);
   }
 
+  // Bez tohto listenera karty videí vo výsledkoch globálneho vyhľadávania
+  // (vykreslené cez innerHTML v renderGlobalSearch, rovnako ako v render()/renderVideoai())
+  // nereagovali na klik vôbec - chýbal event-delegation handler na tomto kontajneri
+  // (sectionsEl aj videoaiSectionsEl ho majú, globalSearchSectionsEl nie).
+  globalSearchSectionsEl.addEventListener("click", function(e){
+    var fileCard = e.target.closest(".card[data-video-file]");
+    if (fileCard) {
+      e.preventDefault();
+      openPlayerFile(fileCard.getAttribute("data-video-file"), fileCard.getAttribute("data-video-title"), fileCard.getAttribute("data-video-key"));
+      return;
+    }
+    var card = e.target.closest(".card[data-video-id]");
+    if (!card) return;
+    e.preventDefault();
+    openPlayer(card.getAttribute("data-video-id"), card.getAttribute("data-video-title"));
+  });
+
   function setGlobalSearchActive(active){
     if (active === globalSearchActive) { if (active) renderGlobalSearch(); return; }
     globalSearchActive = active;
