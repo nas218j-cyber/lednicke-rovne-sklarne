@@ -1198,7 +1198,7 @@
         <video id="vp-video" muted loop playsinline controls hidden></video>
       </div>
     </div>
-    <div class="vp-caption"><span class="txt" id="vp-title"></span></div>
+    <div class="vp-caption"><span class="txt" id="vp-title"></span><button type="button" class="lb-cap-edit" id="vp-cap-edit" hidden>&#9998;</button><span class="lb-cap-form" id="vp-cap-form" hidden><input type="text" id="vp-cap-input" maxlength="100"><button type="button" class="lb-cap-save" id="vp-cap-save">Uložiť</button><button type="button" class="lb-cap-cancel" id="vp-cap-cancel">Zrušiť</button></span></div>
   </div>
 
 </div>
@@ -1266,7 +1266,7 @@
     if (v.file) {
       var fileUrl = aiVideoUrl(v.file);
       return (
-        '<a class="card card-ai" href="#" rel="noopener" data-title="' + v.title.toLowerCase() + '" data-video-file="' + fileUrl + '" data-video-title="' + v.title.replace(/"/g, "&quot;") + '">' +
+        '<a class="card card-ai" href="#" rel="noopener" data-title="' + v.title.toLowerCase() + '" data-video-file="' + fileUrl + '" data-video-key="' + v.file + '" data-video-title="' + v.title.replace(/"/g, "&quot;") + '">' +
           '<span class="ai-thumb"><video data-src="' + fileUrl + '" muted playsinline preload="none"></video><span class="ai-badge">' + playIcon() + '</span></span>' +
           '<span class="body">' +
             '<span class="title">' + v.title + '</span>' +
@@ -1333,7 +1333,7 @@
   var vpTitle = document.getElementById("vp-title");
   var vpExternal = document.getElementById("vp-external");
   var vpShareBtn = document.getElementById("vp-share");
-  var currentPlayerFileUrl = null, currentPlayerFileTitle = "";
+  var currentPlayerFileUrl = null, currentPlayerFileTitle = "", currentPlayerFileKey = null;
   var videoPlaySession = 0;
   var vpBack = document.getElementById("vp-back");
 
@@ -1394,14 +1394,17 @@
     vpVideo.hidden = true;
     vpIframe.hidden = false;
     vpIframe.src = "https://www.youtube.com/embed/" + encodeURIComponent(id) + "?autoplay=1&playsinline=1&rel=0";
-    vpTitle.textContent = title || "";
     vpExternal.hidden = false;
     vpExternal.href = "https://www.youtube.com/watch?v=" + encodeURIComponent(id);
     // YouTube video nemá u nás hostovaný súbor na zdieľanie (len vnorený iframe) —
     // tlačidlo Zdieľať je určené len pre súborové AI videá (pozri openPlayerFile).
+    // Rovnako nemá vlastný prepisovateľný titulok (ten má len openPlayerFile, pozri nižšie) —
+    // currentPlayerFileKey=null teda zabezpečí, že sa ceruzka na úpravu titulku neukáže.
     currentPlayerFileUrl = null;
-    currentPlayerFileTitle = "";
+    currentPlayerFileTitle = title || "";
+    currentPlayerFileKey = null;
     vpShareBtn.hidden = true;
+    vcInit().then(vcRender);
     videoPlayerEl.hidden = false;
     notifyAndroidPlayerState(true);
     requestWakeLock();
@@ -1411,7 +1414,7 @@
   // --- Prehrávanie súborových AI videí ("živá fotka") priamo v appke ---
   // Na rozdiel od YouTube videa tu nejde o vnorený iframe, ale o natívny <video>,
   // keďže súbor je hostovaný priamo v našom repozitári (nie na YouTube).
-  function openPlayerFile(url, title){
+  function openPlayerFile(url, title, key){
     var fresh = vpIframe.cloneNode(false);
     fresh.src = "about:blank";
     vpIframe.parentNode.replaceChild(fresh, vpIframe);
@@ -1426,11 +1429,12 @@
     vpVideo.load();
     videoPlaySession++;
     loadAndPlayVideoWithRetry(vpVideo, url, 0, videoPlaySession);
-    vpTitle.textContent = title || "";
     // Súborové video nemá vlastnú stránku na YouTube, tak odkaz "Otvoriť v YouTube appke" schováme.
     vpExternal.hidden = true;
     currentPlayerFileUrl = url;
     currentPlayerFileTitle = title || "";
+    currentPlayerFileKey = key || null;
+    vcInit().then(vcRender);
     vpShareBtn.hidden = false;
     videoPlayerEl.hidden = false;
     notifyAndroidPlayerState(true);
@@ -1497,7 +1501,7 @@
     var fileCard = e.target.closest(".card[data-video-file]");
     if (fileCard) {
       e.preventDefault();
-      openPlayerFile(fileCard.getAttribute("data-video-file"), fileCard.getAttribute("data-video-title"));
+      openPlayerFile(fileCard.getAttribute("data-video-file"), fileCard.getAttribute("data-video-title"), fileCard.getAttribute("data-video-key"));
       return;
     }
     var card = e.target.closest(".card[data-video-id]");
@@ -1608,7 +1612,7 @@
     var fileCard = e.target.closest(".card[data-video-file]");
     if (fileCard) {
       e.preventDefault();
-      openPlayerFile(fileCard.getAttribute("data-video-file"), fileCard.getAttribute("data-video-title"));
+      openPlayerFile(fileCard.getAttribute("data-video-file"), fileCard.getAttribute("data-video-title"), fileCard.getAttribute("data-video-key"));
       return;
     }
     var card = e.target.closest(".card[data-video-id]");
@@ -3092,6 +3096,111 @@
   };
 
   capWire();
+
+  // ============ Editovateľný titulok AI videa v "Oživené Foto" (admin) ============
+  // Rovnaký princíp ako editovateľný popisok fotky vyššie (kolekcia captions), len
+  // samostatná Firestore kolekcia videoCaptions a klúč dokumentu = encodeURIComponent(v.file)
+  // (git cesta videa, napr. "videos-ai/Kino.mp4"), nie photoId. Pôvodný titulok v data-live.json
+  // sa NEMENÍ, len sa prekryje zobrazeným overridom (presne ako pri popiskoch fotiek).
+  var vcCache = {};
+  var vcReady = null;
+
+  function vcDocId(key){
+    return encodeURIComponent(key);
+  }
+
+  function vcInit(){
+    if (vcReady) return vcReady;
+    vcReady = tagInit().then(function(){
+      return tagFs.getDocs(tagFs.collection(tagDb, 'videoCaptions'));
+    }).then(function(snap){
+      snap.forEach(function(d){
+        var key;
+        try { key = decodeURIComponent(d.id); } catch (e) { key = null; }
+        if (!key) return;
+        var data = d.data() || {};
+        vcCache[key] = (typeof data.text === 'string') ? data.text : '';
+      });
+    })['catch'](function(){});
+    return vcReady;
+  }
+
+  function vcCurrentText(){
+    if (!currentPlayerFileKey) return currentPlayerFileTitle || '';
+    var override = vcCache.hasOwnProperty(currentPlayerFileKey) ? vcCache[currentPlayerFileKey] : null;
+    return (override !== null && override !== undefined && override !== '') ? override : (currentPlayerFileTitle || '');
+  }
+
+  function vcRender(){
+    var vcForm = document.getElementById('vp-cap-form');
+    var vcEditBtn = document.getElementById('vp-cap-edit');
+    if (vcForm) vcForm.hidden = true;
+    if (vpTitle) {
+      vpTitle.hidden = false;
+      vpTitle.textContent = vcCurrentText();
+    }
+    if (vcEditBtn) vcEditBtn.hidden = !(tagAdminLogged && currentPlayerFileKey);
+  }
+
+  function vcStartEdit(){
+    if (!currentPlayerFileKey) return;
+    var vcForm = document.getElementById('vp-cap-form');
+    var vcInput = document.getElementById('vp-cap-input');
+    var vcEditBtn = document.getElementById('vp-cap-edit');
+    if (!vcForm || !vcInput) return;
+    vcInput.value = vcCurrentText();
+    if (vpTitle) vpTitle.hidden = true;
+    if (vcEditBtn) vcEditBtn.hidden = true;
+    vcForm.hidden = false;
+    vcInput.focus();
+    vcInput.select();
+  }
+
+  function vcCancelEdit(){
+    vcRender();
+  }
+
+  function vcSaveEdit(){
+    if (!currentPlayerFileKey) { vcCancelEdit(); return; }
+    if (!tagAdminLogged) { vcCancelEdit(); return; }
+    var vcInput = document.getElementById('vp-cap-input');
+    if (!vcInput) return;
+    var text = (vcInput.value || '').trim();
+    if (!text) return;
+    if (text.length > 100) text = text.slice(0, 100);
+    var key = currentPlayerFileKey;
+    vcInit().then(function(){
+      var ref = tagFs.doc(tagDb, 'videoCaptions', vcDocId(key));
+      return tagFs.setDoc(ref, { text: text, updatedAt: tagFs.serverTimestamp() });
+    }).then(function(){
+      vcCache[key] = text;
+      vcRender();
+    })['catch'](function(){
+      alert('Nepodarilo sa uložiť titulok, skús to prosím znova.');
+    });
+  }
+
+  function vcWire(){
+    var vcEditBtn = document.getElementById('vp-cap-edit');
+    var vcSaveBtn = document.getElementById('vp-cap-save');
+    var vcCancelBtn = document.getElementById('vp-cap-cancel');
+    var vcInput = document.getElementById('vp-cap-input');
+    if (vcEditBtn) vcEditBtn.addEventListener('click', function(){ vcInit().then(vcStartEdit); });
+    if (vcSaveBtn) vcSaveBtn.addEventListener('click', vcSaveEdit);
+    if (vcCancelBtn) vcCancelBtn.addEventListener('click', vcCancelEdit);
+    if (vcInput) vcInput.addEventListener('keydown', function(e){
+      if (e.key === 'Enter') { e.preventDefault(); vcSaveEdit(); }
+      if (e.key === 'Escape') { e.preventDefault(); vcCancelEdit(); }
+    });
+  }
+
+  var __origTagUpdateAdminViewForVc = tagUpdateAdminView;
+  tagUpdateAdminView = function(){
+    __origTagUpdateAdminViewForVc();
+    if (!videoPlayerEl.hidden) vcInit().then(vcRender);
+  };
+
+  vcWire();
 
   // ============ Vymazanie fotky z galérie (len admin) ============
   // Klientská appka nemá (a nesmie mať) Cloudinary/GitHub API secret potrebný na prepis
