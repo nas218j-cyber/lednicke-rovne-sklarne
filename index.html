@@ -1195,7 +1195,7 @@
     <div class="vp-body">
       <div class="vp-frame-wrap">
         <iframe id="vp-iframe" src="" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-        <video id="vp-video" muted loop playsinline controls hidden></video>
+        <video id="vp-video" loop playsinline controls hidden></video>
       </div>
     </div>
     <div class="vp-caption"><span class="txt" id="vp-title"></span><button type="button" class="lb-cap-edit" id="vp-cap-edit" hidden>&#9998;</button><span class="lb-cap-form" id="vp-cap-form" hidden><input type="text" id="vp-cap-input" maxlength="100"><button type="button" class="lb-cap-save" id="vp-cap-save">Uložiť</button><button type="button" class="lb-cap-cancel" id="vp-cap-cancel">Zrušiť</button></span></div>
@@ -1427,6 +1427,10 @@
     vpVideo.pause();
     vpVideo.removeAttribute("src");
     vpVideo.load();
+    // Oživené Foto video sa otvára priamo klikom používateľa (user gesture), takže
+    // prehliadač dovolí prehrávanie so zvukom hneď od začiatku - preto explicitne
+    // vypneme muted namiesto spoliehania sa na predvolený stav elementu.
+    vpVideo.muted = false;
     videoPlaySession++;
     loadAndPlayVideoWithRetry(vpVideo, url, 0, videoPlaySession);
     // Súborové video nemá vlastnú stránku na YouTube, tak odkaz "Otvoriť v YouTube appke" schováme.
