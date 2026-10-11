@@ -3202,6 +3202,39 @@
 
   vcWire();
 
+  // Prekrytie titulku sa od tohto bodu zobrazuje aj v dlaždici v zozname albumu (nie
+  // len v samotnom prehrávači) - po načítaní prekrytí z Firestore sa priamo prepíšu
+  // tituly v poli VIDEOS (v.title), čím to automaticky zohľadnia všetky miesta, ktoré
+  // VIDEOS vykresľujú (cardHtml v render()/renderVideoai()/renderGlobalSearch aj
+  // samotný prehrávač cez data-video-title atribút karty).
+  function vcApplyOverridesToVideos(){
+    VIDEOS.forEach(function(v){
+      if (!v.file) return;
+      var override = vcCache.hasOwnProperty(v.file) ? vcCache[v.file] : null;
+      if (override) v.title = override;
+    });
+  }
+
+  function vcRerenderVideoLists(){
+    render();
+    if (videoaiRendered) renderVideoai();
+    if (globalSearchActive) renderGlobalSearch();
+  }
+
+  vcInit().then(function(){
+    vcApplyOverridesToVideos();
+    vcRerenderVideoLists();
+  });
+
+  var __origRefreshFromRemoteDataForVc = refreshFromRemoteData;
+  refreshFromRemoteData = function(data){
+    __origRefreshFromRemoteDataForVc(data);
+    vcInit().then(function(){
+      vcApplyOverridesToVideos();
+      vcRerenderVideoLists();
+    });
+  };
+
   // ============ Vymazanie fotky z galérie (len admin) ============
   // Klientská appka nemá (a nesmie mať) Cloudinary/GitHub API secret potrebný na prepis
   // data-live.json, takže mazanie funguje rovnako ako schvaľovanie fotiek: admin klikom
