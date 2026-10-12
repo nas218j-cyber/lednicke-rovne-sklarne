@@ -463,6 +463,27 @@
   }
   .toptab[aria-selected="true"]{background:var(--accent); color:#fff9f2;}
 
+  /* Vizualny hint, ze .chips/.toptabs sa daju posuvat vodorovne (vela ludi si to nevsimlo) */
+  .scrollfade-wrap{position:relative;}
+  .scrollfade{
+    position:absolute; top:0; bottom:0; width:34px;
+    display:flex; align-items:center;
+    pointer-events:none; opacity:0; transition:opacity .25s ease; z-index:2;
+  }
+  .scrollfade.left{left:0; justify-content:flex-start; background:linear-gradient(to right, var(--bg) 25%, transparent);}
+  .scrollfade.right{right:0; justify-content:flex-end; background:linear-gradient(to left, var(--bg) 25%, transparent);}
+  .scrollfade.show{opacity:1;}
+  .scrollfade-arrow{color:var(--accent); opacity:.9; animation:scrollfadeNudge 1.6s ease-in-out infinite;}
+  .scrollfade.left .scrollfade-arrow{animation-delay:.1s;}
+  @keyframes scrollfadeNudge{
+    0%,100%{transform:translateX(0);}
+    50%{transform:translateX(3px);}
+  }
+  .scrollfade.left .scrollfade-arrow{transform:scaleX(-1);}
+  @media (prefers-reduced-motion: reduce){
+    .scrollfade-arrow{animation:none;}
+  }
+
   /* --- 3D "glass pane" flip transition medzi Videá / História --- */
   main{ position:relative; perspective:1400px; }
   #view-videos, #view-history, #view-foto, #view-sklarne, #view-videoai{
@@ -2598,6 +2619,63 @@
     moved = false;
   }, true);
 })();
+
+// Vizualny hint ("posuvnik"), ze .chips/.toptabs riadky sa daju posuvat vodorovne -
+// bocny fade + sipka pri okraji (ked je co posuvat) + jemne "nudge" posunutie pri prvom zobrazeni
+(function(){
+  function updateScrollFade(el){
+    var wrap = el.parentNode;
+    if(!wrap || !wrap.classList || !wrap.classList.contains('scrollfade-wrap')) return;
+    var leftEl = wrap.querySelector('.scrollfade.left');
+    var rightEl = wrap.querySelector('.scrollfade.right');
+    var maxScroll = el.scrollWidth - el.clientWidth;
+    var overflow = maxScroll > 2;
+    if(leftEl) leftEl.classList.toggle('show', overflow && el.scrollLeft > 2);
+    if(rightEl) rightEl.classList.toggle('show', overflow && el.scrollLeft < maxScroll - 2);
+  }
+  var ARROW_SVG = '<svg class="scrollfade-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg>';
+  function wireEl(el){
+    if(el.__scrollfadeInit) return;
+    el.__scrollfadeInit = true;
+    var wrap = document.createElement('div');
+    wrap.className = 'scrollfade-wrap';
+    el.parentNode.insertBefore(wrap, el);
+    wrap.appendChild(el);
+    var leftFade = document.createElement('div');
+    leftFade.className = 'scrollfade left';
+    leftFade.setAttribute('aria-hidden', 'true');
+    leftFade.innerHTML = ARROW_SVG;
+    var rightFade = document.createElement('div');
+    rightFade.className = 'scrollfade right';
+    rightFade.setAttribute('aria-hidden', 'true');
+    rightFade.innerHTML = ARROW_SVG;
+    wrap.appendChild(leftFade);
+    wrap.appendChild(rightFade);
+    el.addEventListener('scroll', function(){ updateScrollFade(el); }, {passive:true});
+    new MutationObserver(function(){ updateScrollFade(el); }).observe(el, {childList:true});
+    updateScrollFade(el);
+    // jemny jednorazovy "nudge" (posun a spat), aby si ludia vsimli ze sa to posuva
+    if(!el.__scrollfadeNudged){
+      requestAnimationFrame(function(){
+        if(el.scrollWidth - el.clientWidth > 4){
+          el.__scrollfadeNudged = true;
+          setTimeout(function(){
+            el.scrollTo({left: 40, behavior:'smooth'});
+            setTimeout(function(){ el.scrollTo({left: 0, behavior:'smooth'}); }, 420);
+          }, 650);
+        }
+      });
+    }
+  }
+  function wireAll(){
+    document.querySelectorAll('.chips, .toptabs').forEach(wireEl);
+  }
+  wireAll();
+  window.addEventListener('resize', function(){
+    document.querySelectorAll('.scrollfade-wrap > .chips, .scrollfade-wrap > .toptabs').forEach(updateScrollFade);
+  });
+})();
+
 
 
   
