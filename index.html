@@ -2657,6 +2657,19 @@
     btn.innerHTML = ARROW_SVG;
     return btn;
   }
+  function maybeNudge(el){
+    // jemny jednorazovy "nudge" (posun a spat), aby si ludia vsimli ze sa to posuva -
+    // kym je el skryty (napr. este nezobrazena zalozka "Videa"/"Oziven\u00e9 Foto"), scrollWidth/clientWidth su 0,
+    // tak sa to sem vola znova aj z ResizeObserveru, hned ako el realne dostane rozmer (zalozka sa zobrazi)
+    if(el.__scrollfadeNudged) return;
+    if(el.scrollWidth - el.clientWidth > 4){
+      el.__scrollfadeNudged = true;
+      setTimeout(function(){
+        el.scrollTo({left: 40, behavior:'smooth'});
+        setTimeout(function(){ el.scrollTo({left: 0, behavior:'smooth'}); }, 420);
+      }, 350);
+    }
+  }
   function wireEl(el){
     if(el.__scrollfadeInit) return;
     el.__scrollfadeInit = true;
@@ -2678,19 +2691,16 @@
     wrap.appendChild(rightFade);
     el.addEventListener('scroll', function(){ updateScrollFade(el); }, {passive:true});
     new MutationObserver(function(){ updateScrollFade(el); }).observe(el, {childList:true});
-    updateScrollFade(el);
-    // jemny jednorazovy "nudge" (posun a spat), aby si ludia vsimli ze sa to posuva
-    if(!el.__scrollfadeNudged){
-      requestAnimationFrame(function(){
-        if(el.scrollWidth - el.clientWidth > 4){
-          el.__scrollfadeNudged = true;
-          setTimeout(function(){
-            el.scrollTo({left: 40, behavior:'smooth'});
-            setTimeout(function(){ el.scrollTo({left: 0, behavior:'smooth'}); }, 420);
-          }, 650);
-        }
-      });
+    // ResizeObserver zachyti aj pripad, ked el bol pri inite skryty (hidden zalozka, napr. "Videa"),
+    // a teda mal scrollWidth/clientWidth=0 - akonahle sa zalozka prepne a el dostane realny rozmer,
+    // tento callback prebehne a fade/sipky aj "nudge" sa spravne dopocitaju
+    if(window.ResizeObserver){
+      new ResizeObserver(function(){ updateScrollFade(el); maybeNudge(el); }).observe(el);
+    } else {
+      window.addEventListener('resize', function(){ updateScrollFade(el); maybeNudge(el); });
     }
+    updateScrollFade(el);
+    requestAnimationFrame(function(){ maybeNudge(el); });
   }
   function wireAll(){
     document.querySelectorAll('.chips, .toptabs').forEach(wireEl);
