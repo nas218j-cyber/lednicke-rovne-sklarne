@@ -1875,13 +1875,35 @@
   var photoLazyObserver = null;
   function photoImgRetry(img, url){
     var attempt = 0;
-    img.onerror = function(){
-      attempt++;
-      if (attempt <= 3){
-        setTimeout(function(){ img.src = url + "?r=" + attempt; }, 1200 * attempt);
+    function startAttempt(){
+      var settled = false;
+      var stallTimer = null;
+      function cleanup(){
+        img.onerror = null;
+        img.onload = null;
+        if (stallTimer) clearTimeout(stallTimer);
       }
-    };
-    img.src = url;
+      function fail(){
+        if (settled) return;
+        settled = true;
+        cleanup();
+        attempt++;
+        if (attempt <= 3){
+          setTimeout(startAttempt, 300);
+        }
+      }
+      img.onload = function(){ settled = true; cleanup(); };
+      img.onerror = fail;
+      // CDN (jsDelivr) sa obcas "zasekne" - poziadavka nikdy nevrati ani data, ani
+      // chybu, takze "onerror" samo o sebe nestaci. Po par sekundach ticha preto
+      // skusime dalsi pokus sami (posledny pokus ide rovno na GitHub raw ako zalohu,
+      // rovnaky princip ako pri prehravani AI videi - pozri jsDelivrToRawFallback).
+      stallTimer = setTimeout(fail, 6000);
+      img.src = attempt === 0 ? url :
+        attempt === 3 ? jsDelivrToRawFallback(url) :
+        url + "?r=" + attempt;
+    }
+    startAttempt();
   }
   function setupPhotoLazyLoad(){
     if (!("IntersectionObserver" in window)) {
