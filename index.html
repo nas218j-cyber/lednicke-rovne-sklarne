@@ -1489,20 +1489,48 @@
   // súbor (s pridaným parametrom v URL, aby sme obišli prípadnú zlú medzipamäť) —
   // celkovo max. 3 pokusy. "session" zabezpečí, že sa neskorý pokus neprejaví, ak
   // si medzitým používateľ otvoril iné video alebo prehrávač zatvoril.
+  // Ak je baseUrl na jsDelivr CDN (PHOTOS_REPO), vráti rovnaký súbor priamo z
+  // GitHub raw ako záložný zdroj - použité až ako posledný pokus, keď jsDelivr
+  // vôbec neodpovedá (pozri loadAndPlayVideoWithRetry nižšie).
+  function jsDelivrToRawFallback(url){
+    var prefix = "https://cdn.jsdelivr.net/gh/" + PHOTOS_REPO + "@" + PHOTOS_REF + "/";
+    if (url.indexOf(prefix) !== 0) return url;
+    return "https://raw.githubusercontent.com/" + PHOTOS_REPO + "/" + PHOTOS_REF + "/" + url.slice(prefix.length);
+  }
   function loadAndPlayVideoWithRetry(videoEl, baseUrl, attempt, session){
     if (session !== videoPlaySession) return;
     var retryUrl = attempt === 0 ? baseUrl :
+      attempt === 2 ? jsDelivrToRawFallback(baseUrl) :
       baseUrl + (baseUrl.indexOf("?") === -1 ? "?" : "&") + "retry=" + attempt + "_" + Date.now();
-    var onError = function(){
+    var settled = false;
+    var stallTimer = null;
+    function cleanup(){
       videoEl.removeEventListener("error", onError);
+      videoEl.removeEventListener("loadeddata", onLoaded);
+      videoEl.removeEventListener("playing", onLoaded);
+      if (stallTimer) clearTimeout(stallTimer);
+    }
+    function retryOrGiveUp(){
+      if (settled) return;
+      settled = true;
+      cleanup();
       if (session !== videoPlaySession) return;
       if (attempt < 2){
         setTimeout(function(){
           loadAndPlayVideoWithRetry(videoEl, baseUrl, attempt + 1, session);
         }, 500);
       }
-    };
+    }
+    var onError = function(){ retryOrGiveUp(); };
+    var onLoaded = function(){ settled = true; cleanup(); };
     videoEl.addEventListener("error", onError, { once: true });
+    videoEl.addEventListener("loadeddata", onLoaded, { once: true });
+    videoEl.addEventListener("playing", onLoaded, { once: true });
+    // CDN (jsDelivr) sa občas "zasekne" - požiadavka nikdy nevráti ani dáta, ani
+    // chybu, takže natívna "error" udalosť vôbec nenastane. Po pár sekundách ticha
+    // preto skúsime ďalší pokus sami (posledný, 3. pokus ide rovno na GitHub raw
+    // ako zálohu, keďže ten bol pri testovaní spoľahlivý aj keď jsDelivr zlyhával).
+    stallTimer = setTimeout(retryOrGiveUp, 7000);
     videoEl.src = retryUrl;
     videoEl.load();
     videoEl.play().catch(function(){});
