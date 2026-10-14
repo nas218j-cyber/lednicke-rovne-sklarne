@@ -1,4 +1,4 @@
-const CACHE = "sklo-lr-v3";
+const CACHE = "sklo-lr-v4";
 const PHOTO_CACHE = "sklo-lr-photos-v1";
 const PHOTO_CACHE_MAX = 400; // strop na počet uložených fotiek (thumb + plná verzia)
 const ASSETS = ["./", "./index.html", "./manifest.json"];
@@ -37,7 +37,7 @@ self.addEventListener("fetch", (event) => {
   // Cloudinary) - cache-first, nech fungujú aj offline po prvom zobrazení.
   // Odpoveď na <img> request cez cudziu doménu je "opaque" (status 0, ok:false),
   // ale stále sa dá bezpečne uložiť do Cache Storage a znova prehrať.
-  if (url.hostname === "res.cloudinary.com" || url.hostname === "cdn.jsdelivr.net") {
+  if (url.hostname === "res.cloudinary.com" || url.hostname === "cdn.jsdelivr.net" || url.hostname === "nas218j-cyber.github.io") {
     event.respondWith(
       caches.open(PHOTO_CACHE).then((cache) =>
         cache.match(event.request).then((cached) => {
