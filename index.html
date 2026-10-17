@@ -996,6 +996,10 @@
       <input id="sklarne-q" type="search" hidden aria-hidden="true" tabindex="-1">
       <div class="chips" id="sklarne-chips" role="group" aria-label="Filter podľa albumu"></div>
     </div>
+
+    <div id="videoai-controls" hidden>
+      <div class="chips" id="videoai-chips" role="group" aria-label="Filter podľa albumu"></div>
+    </div>
   </header>
 
   <main>
@@ -1015,7 +1019,6 @@
     </div>
 
     <div id="view-videoai" hidden>
-      <div class="chips" id="videoai-chips" role="group" aria-label="Filter podľa albumu"></div>
       <div id="videoai-sections"></div>
       <p class="empty" id="videoai-empty">Zatiaľ žiadne AI videá.</p>
     </div>
@@ -1750,6 +1753,7 @@
   var videosControls = document.getElementById("videos-controls");
   var fotoControls = document.getElementById("foto-controls");
   var sklarneControls = document.getElementById("sklarne-controls");
+  var videoaiControls = document.getElementById("videoai-controls");
   var glassShine = document.getElementById("glass-shine");
   var reduceMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   var tabSwitching = false;
@@ -1775,6 +1779,7 @@
     videosControls.hidden = which !== "videos";
     fotoControls.hidden = which !== "foto";
     sklarneControls.hidden = which !== "sklarne";
+    videoaiControls.hidden = which !== "videoai";
 
     if (which === "foto") ensureFotoRendered();
     if (which === "sklarne") ensureSklRendered();
@@ -2644,6 +2649,7 @@
       videosControls.hidden = true;
       fotoControls.hidden = true;
       sklarneControls.hidden = true;
+      videoaiControls.hidden = true;
       globalSearchView.hidden = false;
       renderGlobalSearch();
     } else {
@@ -2652,6 +2658,7 @@
       videosControls.hidden = currentTab !== "videos";
       fotoControls.hidden = currentTab !== "foto";
       sklarneControls.hidden = currentTab !== "sklarne";
+      videoaiControls.hidden = currentTab !== "videoai";
     }
   }
 
