@@ -3563,6 +3563,39 @@
     }
   }
 
+  // Načíta vybraný obrázok, zmenší ho (dlhšia strana max 1600 px) a vráti JPEG data URL
+  // dostatočne malé na uloženie do jedného Firestore dokumentu (limit 1 MB).
+  var SUB_MAX_DATAURL = 900000;
+  function subMakeImageDataUrl(file){
+    return new Promise(function(resolve, reject){
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function(){
+        try {
+          var w0 = img.naturalWidth, h0 = img.naturalHeight;
+          if (!w0 || !h0) { URL.revokeObjectURL(url); reject(new Error('decode')); return; }
+          var maxSide = 1600, q = 0.85, out = '';
+          for (var i = 0; i < 8; i++){
+            var s = Math.min(1, maxSide / Math.max(w0, h0));
+            var c = document.createElement('canvas');
+            c.width = Math.max(1, Math.round(w0 * s)); c.height = Math.max(1, Math.round(h0 * s));
+            var ctx = c.getContext('2d');
+            ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+            ctx.drawImage(img, 0, 0, c.width, c.height);
+            out = c.toDataURL('image/jpeg', q);
+            if (out.length <= SUB_MAX_DATAURL) break;
+            if (q > 0.6) q -= 0.1; else maxSide = Math.round(maxSide * 0.8);
+          }
+          URL.revokeObjectURL(url);
+          if (!out || out.length > SUB_MAX_DATAURL || out.indexOf('data:image/jpeg') !== 0) { reject(new Error('size')); return; }
+          resolve(out);
+        } catch (e) { URL.revokeObjectURL(url); reject(e); }
+      };
+      img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error('decode')); };
+      img.src = url;
+    });
+  }
+
   function subSend(){
     var errEl = document.getElementById('sub-err');
     var sendBtn = document.getElementById('sub-send-btn');
@@ -3581,16 +3614,15 @@
     subLastSubmit = now;
     if (sendBtn){ sendBtn.disabled = true; sendBtn.textContent = 'Nahrávam…'; }
 
-    var fd = new FormData();
-    fd.append('file', subSelectedFile);
-    fd.append('upload_preset', SUB_UPLOAD_PRESET);
-    fetch('https://api.cloudinary.com/v1_1/' + PHOTO_CLOUD + '/image/upload', { method: 'POST', body: fd })
-      .then(function(r){ if (!r.ok) throw new Error('upload zlyhal'); return r.json(); })
-      .then(function(data){
-        var photoId = data.public_id;
+    // Fotka sa zmenší priamo v prehliadači (canvas) a uloží sa do Firestore spolu s návrhom
+    // (pole `image` = JPEG data URL). Cloudinary sa už nepoužíva (účet je vypnutý).
+    subMakeImageDataUrl(subSelectedFile)
+      .then(function(dataUrl){
+        var photoId = 'submissions/sub' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
         return tagInit().then(function(){
           return tagFs.addDoc(tagFs.collection(tagDb, 'submissions'), {
             photoId: photoId,
+            image: dataUrl,
             note: note,
             gallery: gallery,
             cat: cat,
@@ -3607,7 +3639,10 @@
       })
       ["catch"](function(e){
         console.error('Odoslanie fotky zlyhalo', e);
-        if (errEl) errEl.textContent = 'Nepodarilo sa odoslať fotku, skús to prosím znova.';
+        if (errEl) errEl.textContent = (e && e.message === 'decode')
+          ? 'Tento formát fotky sa nedá spracovať – skús fotku vo formáte JPG alebo PNG.'
+          : 'Nepodarilo sa odoslať fotku, skús to prosím znova.';
+        subLastSubmit = 0;
         if (sendBtn){ sendBtn.disabled = false; sendBtn.textContent = 'Odoslať'; }
       });
   }
@@ -3635,10 +3670,20 @@
 
     var img = document.createElement('img');
     img.className = 'sub-review-thumb';
-    img.src = subPhotoThumb(d.photoId);
+    img.src = d.image || subPhotoThumb(d.photoId);
     img.alt = '';
     img.title = 'Klikni pre zobrazenie v plnej velkosti';
-    img.addEventListener('click', function(){ window.open(subPhotoFull(d.photoId), '_blank'); });
+    img.addEventListener('click', function(){
+      if (d.image) {
+        try {
+          var parts = d.image.split(','), bin = atob(parts[1]), arr = new Uint8Array(bin.length);
+          for (var k = 0; k < bin.length; k++) arr[k] = bin.charCodeAt(k);
+          window.open(URL.createObjectURL(new Blob([arr], {type: 'image/jpeg'})), '_blank');
+        } catch (e) { console.error(e); }
+      } else {
+        window.open(subPhotoFull(d.photoId), '_blank');
+      }
+    });
     wrap.appendChild(img);
 
     var info = document.createElement('div');
