@@ -463,6 +463,28 @@
     letter-spacing:.03em; padding:9px 14px; border-radius:9px; cursor:pointer;
   }
   .toptab[aria-selected="true"]{background:var(--accent); color:#fff9f2;}
+  /* "Čo pribudlo od poslednej návštevy" - odznaky a označenie nových položiek */
+  .toptab .nv-badge{
+    display:inline-block; min-width:18px; margin-left:6px; padding:1px 6px;
+    border-radius:999px; background:var(--accent2); color:#10201d;
+    font-size:11px; font-weight:700; line-height:16px; text-align:center;
+    letter-spacing:0; vertical-align:1px; animation:nvPop .5s ease-out;
+  }
+  @keyframes nvPop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+  .chip.chip-new{border-color:var(--accent2); color:var(--accent2);}
+  .chip.chip-new[aria-pressed="true"]{background:var(--accent2); color:#10201d;}
+  .photo-thumb{position:relative;}
+  .photo-thumb.is-new::after{
+    content:"Nové"; position:absolute; top:6px; left:6px; padding:2px 7px;
+    border-radius:999px; background:var(--accent2); color:#10201d;
+    font-size:10.5px; font-weight:700; letter-spacing:.03em; box-shadow:0 1px 4px rgba(0,0,0,.35);
+  }
+  .nv-pill{
+    display:inline-block; margin-right:6px; padding:1px 7px; border-radius:999px;
+    background:var(--accent2); color:#10201d; font-size:10.5px; font-weight:700;
+    letter-spacing:.03em; vertical-align:2px;
+  }
+  @media (prefers-reduced-motion: reduce){ .toptab .nv-badge{animation:none;} }
 
   /* Vizualny hint, ze .chips/.toptabs sa daju posuvat vodorovne (vela ludi si to nevsimlo) */
   .scrollfade-wrap{position:relative;}
@@ -1646,6 +1668,7 @@
       return b;
     }
     videoaiChipsEl.appendChild(makeChip("vsetky", "Všetky"));
+    if (newCount("videoai")) { var nvChip = makeChip("__nove", "\u2728 Nové (" + newCount("videoai") + ")"); nvChip.classList.add("chip-new"); videoaiChipsEl.appendChild(nvChip); }
     VIDEOAI_CATS.forEach(function(c){
       videoaiChipsEl.appendChild(makeChip(c.id, c.label));
     });
@@ -1655,7 +1678,8 @@
     videoaiSectionsEl.innerHTML = "";
     var items = VIDEOS.filter(function(v){
       if (v.cat !== "videa-ai") return false;
-      if (activeVideoaiCat !== "vsetky" && v.sub !== activeVideoaiCat) return false;
+      if (activeVideoaiCat === "__nove") { if (!newIs("videoai", v.file)) return false; }
+      else if (activeVideoaiCat !== "vsetky" && v.sub !== activeVideoaiCat) return false;
       return true;
     });
     if (items.length){
@@ -2005,6 +2029,7 @@
       return b;
     }
     fotoChipsEl.appendChild(makeChip("vsetky", "Všetky"));
+    if (newCount("foto")) { var nvChip = makeChip("__nove", "\u2728 Nové (" + newCount("foto") + ")"); nvChip.classList.add("chip-new"); fotoChipsEl.appendChild(nvChip); }
     PHOTO_CATS.forEach(function(c){
       fotoChipsEl.appendChild(makeChip(c.id, c.label));
     });
@@ -2018,6 +2043,7 @@
 
   function computeFotoFiltered(){
     var query = foldSk(fotoQEl.value.trim());
+    if (activeFotoCat === "__nove" && !query) return PHOTOS.filter(function(ph){ return newIs("foto", ph.p); });
     // Pri hľadaní prehľadávame všetky albumy naraz, nielen ten práve vybraný.
     var cats = (activeFotoCat === "vsetky" || query) ? PHOTO_CATS.map(function(c){ return c.id; }) : [activeFotoCat];
     var flat = [];
@@ -2055,7 +2081,7 @@
         var grid = sec.querySelector(".photo-grid");
         var btn = document.createElement("button");
         btn.type = "button";
-        btn.className = "photo-thumb";
+        btn.className = "photo-thumb" + (newIs("foto", ph.p) ? " is-new" : "");
         var img = document.createElement("img");
         img.loading = "lazy";
         img.decoding = "async";
@@ -2137,6 +2163,7 @@
       return b;
     }
     sklChipsEl.appendChild(makeChip("vsetky", "Všetky"));
+    if (newCount("sklarne")) { var nvChip = makeChip("__nove", "\u2728 Nové (" + newCount("sklarne") + ")"); nvChip.classList.add("chip-new"); sklChipsEl.appendChild(nvChip); }
     SKL_CATS.forEach(function(c){
       sklChipsEl.appendChild(makeChip(c.id, c.label));
     });
@@ -2150,6 +2177,7 @@
 
   function computeSklFiltered(){
     var query = foldSk(sklQEl.value.trim());
+    if (activeSklCat === "__nove" && !query) return SKL_PHOTOS.filter(function(ph){ return newIs("sklarne", ph.p); });
     // Pri hľadaní prehľadávame všetky albumy naraz, nielen ten práve vybraný.
     var cats = (activeSklCat === "vsetky" || query) ? SKL_CATS.map(function(c){ return c.id; }) : [activeSklCat];
     var flat = [];
@@ -2187,7 +2215,7 @@
         var grid = sec.querySelector(".photo-grid");
         var btn = document.createElement("button");
         btn.type = "button";
-        btn.className = "photo-thumb";
+        btn.className = "photo-thumb" + (newIs("sklarne", ph.p) ? " is-new" : "");
         var img = document.createElement("img");
         img.loading = "lazy";
         img.decoding = "async";
@@ -3473,6 +3501,117 @@
       vcRerenderVideoLists();
     });
   };
+
+  // ============ "Čo pribudlo od poslednej návštevy" ============
+  // V prehliadači (localStorage) si pamätáme, ktoré fotky/videá už návštevník v ktorej
+  // záložke videl. Čo pribudlo odvtedy: počet v odznaku na záložke, čip "Nové" v kategóriách
+  // a štítok "Nové" na dlaždici. Prvá návšteva = nič nie je "nové" (len sa uloží stav).
+  // Položka prestane byť nová až pri ĎALŠEJ návšteve po otvorení danej záložky.
+  var NV_KEY = "sklolr-seen-v1";
+  var NV_NEW = null;            // {tab: {key:true}} - nové v tejto návšteve
+  var NV_SEEN = null;           // uložený stav {tab: [keys]}
+  var NV_DONE = false;
+  var NV_TABS = ["foto", "sklarne", "videos", "videoai"];
+  function newIs(tab, key){ return !!(NV_NEW && NV_NEW[tab] && NV_NEW[tab][key]); }
+  function newCount(tab){ return NV_NEW && NV_NEW[tab] ? Object.keys(NV_NEW[tab]).length : 0; }
+  function nvKeysFrom(photos, skl, videos){
+    return {
+      foto: (photos || []).map(function(p){ return p.p; }),
+      sklarne: (skl || []).map(function(p){ return p.p; }),
+      videos: (videos || []).filter(function(v){ return !v.file && v.id; }).map(function(v){ return v.id; }),
+      videoai: (videos || []).filter(function(v){ return v.file; }).map(function(v){ return v.file; })
+    };
+  }
+  function nvSave(){ try { localStorage.setItem(NV_KEY, JSON.stringify(NV_SEEN)); } catch(e){} }
+  function nvBadges(){
+    NV_TABS.forEach(function(tab){
+      var btn = TAB_BTN[tab]; if (!btn) return;
+      var old = btn.querySelector(".nv-badge"); if (old) old.remove();
+      var n = newCount(tab);
+      if (n && !(NV_SEEN && NV_SEEN.__viewed && NV_SEEN.__viewed[tab])) {
+        var b = document.createElement("span");
+        b.className = "nv-badge";
+        b.textContent = n > 99 ? "99+" : String(n);
+        b.setAttribute("aria-label", n + " nových");
+        btn.appendChild(b);
+      }
+    });
+  }
+  function nvMarkViewed(tab){
+    if (!NV_DONE || !NV_SEEN || !NV_CURRENT_KEYS) return;
+    NV_SEEN[tab] = NV_CURRENT_KEYS[tab];
+    NV_SEEN.__viewed = NV_SEEN.__viewed || {};
+    NV_SEEN.__viewed[tab] = true;     // len pre túto návštevu (odznak zmizne)
+    var copy = {}; NV_TABS.forEach(function(t){ copy[t] = NV_SEEN[t]; });
+    try { localStorage.setItem(NV_KEY, JSON.stringify(copy)); } catch(e){}
+    var btn = TAB_BTN[tab], old = btn && btn.querySelector(".nv-badge");
+    if (old) old.remove();
+  }
+  var NV_CURRENT_KEYS = null;
+  function nvFinalize(keys){
+    if (NV_DONE) return;
+    NV_DONE = true;
+    NV_CURRENT_KEYS = keys;
+    var stored = null;
+    try { stored = JSON.parse(localStorage.getItem(NV_KEY) || "null"); } catch(e){ stored = null; }
+    NV_NEW = {};
+    if (!stored || typeof stored !== "object") {
+      NV_SEEN = {}; NV_TABS.forEach(function(t){ NV_SEEN[t] = keys[t]; });
+      nvSave();
+      return;
+    }
+    NV_SEEN = stored;
+    NV_TABS.forEach(function(tab){
+      NV_NEW[tab] = {};
+      if (!Array.isArray(stored[tab])) { NV_SEEN[tab] = keys[tab]; return; }
+      var seen = {}; stored[tab].forEach(function(k){ seen[k] = true; });
+      keys[tab].forEach(function(k){ if (!seen[k]) NV_NEW[tab][k] = true; });
+    });
+    nvSave();
+    nvBadges();
+    // Na úzkom mobile môže byť záložka s odznakom mimo obrazovky - jemne k nej posunieme lištu.
+    setTimeout(function(){
+      var first = null;
+      NV_TABS.forEach(function(tab){ var b = TAB_BTN[tab]; if (!first && b && b.querySelector(".nv-badge")) first = b; });
+      var bar = first && first.parentElement;
+      if (!bar) return;
+      var l = first.offsetLeft - bar.offsetLeft, r = l + first.offsetWidth;
+      if (l < bar.scrollLeft || r > bar.scrollLeft + bar.clientWidth) {
+        bar.scrollTo({left: Math.max(0, r - bar.clientWidth + 24), behavior: "smooth"});
+      }
+    }, 1200);
+    // Aktuálne otvorená záložka sa ráta ako videná, ale odznak necháme chvíľu svietiť.
+    setTimeout(function(){ nvMarkViewed(currentTab); }, 6000);
+  }
+  function nvRerender(){
+    if (fotoRendered){ fotoChipsEl.innerHTML = ""; buildFotoChips(); renderFoto(); }
+    if (sklRendered){ sklChipsEl.innerHTML = ""; buildSklChips(); renderSkl(); }
+    if (videoaiRendered){ videoaiChipsEl.innerHTML = ""; buildVideoaiChips(); renderVideoai(); }
+    render();
+  }
+  var __origRefreshFromRemoteDataForNv = refreshFromRemoteData;
+  refreshFromRemoteData = function(data){
+    if (!NV_DONE && data && Array.isArray(data.PHOTOS) && Array.isArray(data.VIDEOS)) {
+      nvFinalize(nvKeysFrom(data.PHOTOS, data.SKL_PHOTOS, data.VIDEOS));
+    }
+    __origRefreshFromRemoteDataForNv(data);
+  };
+  // Offline / zlyhané stiahnutie dát: po chvíli vyhodnotíme podľa vstavaných dát.
+  setTimeout(function(){
+    if (NV_DONE) return;
+    nvFinalize(nvKeysFrom(PHOTOS, SKL_PHOTOS, VIDEOS));
+    nvRerender();
+  }, 9000);
+  var __origCardHtmlForNv = cardHtml;
+  cardHtml = function(v){
+    var h = __origCardHtmlForNv(v);
+    var isNew = v.file ? newIs("videoai", v.file) : newIs("videos", v.id);
+    return isNew ? h.replace('<span class="title">', '<span class="title"><span class="nv-pill">Nové</span>') : h;
+  };
+  NV_TABS.forEach(function(tab){
+    var btn = TAB_BTN[tab];
+    if (btn) btn.addEventListener("click", function(){ nvMarkViewed(tab); });
+  });
 
   // ============ Vymazanie fotky z galérie (len admin) ============
   // Klientská appka nemá (a nesmie mať) Cloudinary/GitHub API secret potrebný na prepis
