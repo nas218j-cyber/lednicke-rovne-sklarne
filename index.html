@@ -472,6 +472,11 @@
   }
   @keyframes nvPop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
   .chip.chip-new{border-color:var(--accent2); color:var(--accent2);}
+  .chip .nv-count{
+    display:inline-block; min-width:16px; margin-left:6px; padding:0 5px; border-radius:999px;
+    background:var(--accent2); color:#10201d; font-size:10.5px; font-weight:700; line-height:15px;
+    text-align:center; letter-spacing:0; vertical-align:1px;
+  }
   .chip.chip-new[aria-pressed="true"]{background:var(--accent2); color:#10201d;}
   .photo-thumb{position:relative;}
   .photo-thumb.is-new::after{
@@ -1342,8 +1347,10 @@
       b.type = "button";
       b.textContent = c.label;
       b.setAttribute("aria-pressed", c.id === activeCat ? "true" : "false");
+      b.dataset.nvId = c.id;
       b.addEventListener("click", function(){
         activeCat = c.id;
+        nvAlbumOpened("videos", c.id);
         Array.prototype.forEach.call(chipsEl.children, function(ch){
           ch.setAttribute("aria-pressed", ch === b ? "true" : "false");
         });
@@ -1658,8 +1665,10 @@
       b.type = "button";
       b.textContent = label;
       b.setAttribute("aria-pressed", id === activeVideoaiCat ? "true" : "false");
+      b.dataset.nvId = id;
       b.addEventListener("click", function(){
         activeVideoaiCat = id;
+        nvAlbumOpened("videoai", id);
         Array.prototype.forEach.call(videoaiChipsEl.children, function(ch){
           ch.setAttribute("aria-pressed", ch === b ? "true" : "false");
         });
@@ -2019,8 +2028,10 @@
       b.type = "button";
       b.textContent = label;
       b.setAttribute("aria-pressed", id === activeFotoCat ? "true" : "false");
+      b.dataset.nvId = id;
       b.addEventListener("click", function(){
         activeFotoCat = id;
+        nvAlbumOpened("foto", id);
         Array.prototype.forEach.call(fotoChipsEl.children, function(ch){
           ch.setAttribute("aria-pressed", ch === b ? "true" : "false");
         });
@@ -2153,8 +2164,10 @@
       b.type = "button";
       b.textContent = label;
       b.setAttribute("aria-pressed", id === activeSklCat ? "true" : "false");
+      b.dataset.nvId = id;
       b.addEventListener("click", function(){
         activeSklCat = id;
+        nvAlbumOpened("sklarne", id);
         Array.prototype.forEach.call(sklChipsEl.children, function(ch){
           ch.setAttribute("aria-pressed", ch === b ? "true" : "false");
         });
@@ -3503,32 +3516,45 @@
   };
 
   // ============ "Čo pribudlo od poslednej návštevy" ============
-  // V prehliadači (localStorage) si pamätáme, ktoré fotky/videá už návštevník v ktorej
-  // záložke videl. Čo pribudlo odvtedy: počet v odznaku na záložke, čip "Nové" v kategóriách
-  // a štítok "Nové" na dlaždici. Prvá návšteva = nič nie je "nové" (len sa uloží stav).
-  // Položka prestane byť nová až pri ĎALŠEJ návšteve po otvorení danej záložky.
+  // V prehliadači (localStorage) si pamätáme, ktoré fotky/videá už návštevník "videl".
+  // Položka sa ráta ako videná až keď návštevník OTVORÍ jej album (klik na kategóriu)
+  // alebo otvorí priamo danú fotku/video. Dovtedy svieti počet na záložke, počet pri
+  // albume, čip "Nové" a štítok "Nové" - aj pri ďalších návštevách.
+  // Prvá návšteva = nič nie je "nové" (len sa uloží stav).
   var NV_KEY = "sklolr-seen-v1";
-  var NV_NEW = null;            // {tab: {key:true}} - nové v tejto návšteve
+  var NV_NEW = null;            // {tab: {key:true}} - nové v tejto návšteve (štítky "Nové")
+  var NV_PEND = null;           // {tab: {key:group}} - ešte neotvorené (počty)
   var NV_SEEN = null;           // uložený stav {tab: [keys]}
   var NV_DONE = false;
   var NV_TABS = ["foto", "sklarne", "videos", "videoai"];
+  var NV_CURRENT_KEYS = null;
   function newIs(tab, key){ return !!(NV_NEW && NV_NEW[tab] && NV_NEW[tab][key]); }
   function newCount(tab){ return NV_NEW && NV_NEW[tab] ? Object.keys(NV_NEW[tab]).length : 0; }
-  function nvKeysFrom(photos, skl, videos){
-    return {
-      foto: (photos || []).map(function(p){ return p.p; }),
-      sklarne: (skl || []).map(function(p){ return p.p; }),
-      videos: (videos || []).filter(function(v){ return !v.file && v.id; }).map(function(v){ return v.id; }),
-      videoai: (videos || []).filter(function(v){ return v.file; }).map(function(v){ return v.file; })
-    };
+  function nvPendCount(tab, group){
+    var p = NV_PEND && NV_PEND[tab]; if (!p) return 0;
+    var n = 0; for (var k in p) if (group === undefined || p[k] === group) n++;
+    return n;
   }
-  function nvSave(){ try { localStorage.setItem(NV_KEY, JSON.stringify(NV_SEEN)); } catch(e){} }
+  function nvItems(photos, skl, videos){
+    var r = {foto:[], sklarne:[], videos:[], videoai:[]};
+    (photos || []).forEach(function(p){ r.foto.push([p.p, p.cat]); });
+    (skl || []).forEach(function(p){ r.sklarne.push([p.p, p.cat]); });
+    (videos || []).forEach(function(v){
+      if (v.file) r.videoai.push([v.file, v.sub]);
+      else if (v.id) r.videos.push([v.id, v.cat]);
+    });
+    return r;
+  }
+  function nvSave(){
+    var copy = {}; NV_TABS.forEach(function(t){ copy[t] = NV_SEEN[t]; });
+    try { localStorage.setItem(NV_KEY, JSON.stringify(copy)); } catch(e){}
+  }
   function nvBadges(){
     NV_TABS.forEach(function(tab){
       var btn = TAB_BTN[tab]; if (!btn) return;
       var old = btn.querySelector(".nv-badge"); if (old) old.remove();
-      var n = newCount(tab);
-      if (n && !(NV_SEEN && NV_SEEN.__viewed && NV_SEEN.__viewed[tab])) {
+      var n = nvPendCount(tab);
+      if (n) {
         var b = document.createElement("span");
         b.className = "nv-badge";
         b.textContent = n > 99 ? "99+" : String(n);
@@ -3537,38 +3563,64 @@
       }
     });
   }
-  function nvMarkViewed(tab){
-    if (!NV_DONE || !NV_SEEN || !NV_CURRENT_KEYS) return;
-    NV_SEEN[tab] = NV_CURRENT_KEYS[tab];
-    NV_SEEN.__viewed = NV_SEEN.__viewed || {};
-    NV_SEEN.__viewed[tab] = true;     // len pre túto návštevu (odznak zmizne)
-    var copy = {}; NV_TABS.forEach(function(t){ copy[t] = NV_SEEN[t]; });
-    try { localStorage.setItem(NV_KEY, JSON.stringify(copy)); } catch(e){}
-    var btn = TAB_BTN[tab], old = btn && btn.querySelector(".nv-badge");
-    if (old) old.remove();
+  // Počty pri jednotlivých albumoch (čipoch) + text čipu "Nové".
+  function nvDecorateChips(){
+    if (!NV_DONE) return;
+    [["foto", fotoChipsEl], ["sklarne", sklChipsEl], ["videoai", videoaiChipsEl], ["videos", chipsEl]].forEach(function(pair){
+      var tab = pair[0], el = pair[1]; if (!el) return;
+      Array.prototype.forEach.call(el.children, function(ch){
+        var id = ch.dataset ? ch.dataset.nvId : null; if (!id) return;
+        if (id === "__nove") {
+          var pn = nvPendCount(tab);
+          if (ch.firstChild && ch.firstChild.nodeType === 3) ch.firstChild.nodeValue = "✨ Nové" + (pn ? " (" + pn + ")" : "");
+          return;
+        }
+        var old = ch.querySelector(".nv-count"); if (old) old.remove();
+        if (id === "vsetky") return;
+        var n = nvPendCount(tab, id);
+        if (n) {
+          var s = document.createElement("span");
+          s.className = "nv-count";
+          s.textContent = n > 99 ? "99+" : String(n);
+          s.setAttribute("aria-label", n + " nových");
+          ch.appendChild(s);
+        }
+      });
+    });
   }
-  var NV_CURRENT_KEYS = null;
-  function nvFinalize(keys){
+  function nvSeeKeys(tab, keys){
+    if (!NV_DONE || !NV_SEEN || !NV_PEND || !NV_PEND[tab] || !keys.length) return;
+    var changed = false;
+    keys.forEach(function(k){
+      if (NV_PEND[tab].hasOwnProperty(k)) { delete NV_PEND[tab][k]; NV_SEEN[tab].push(k); changed = true; }
+    });
+    if (!changed) return;
+    nvSave(); nvBadges(); nvDecorateChips();
+  }
+  // Otvorenie albumu (klik na kategóriu) = všetko nové v ňom je videné.
+  function nvAlbumOpened(tab, group){
+    if (!NV_PEND || !NV_PEND[tab] || group === "vsetky" || group === "__nove") return;
+    var keys = []; for (var k in NV_PEND[tab]) if (NV_PEND[tab][k] === group) keys.push(k);
+    nvSeeKeys(tab, keys);
+  }
+  function nvFinalize(items){
     if (NV_DONE) return;
     NV_DONE = true;
-    NV_CURRENT_KEYS = keys;
+    NV_CURRENT_KEYS = items;
     var stored = null;
     try { stored = JSON.parse(localStorage.getItem(NV_KEY) || "null"); } catch(e){ stored = null; }
-    NV_NEW = {};
-    if (!stored || typeof stored !== "object") {
-      NV_SEEN = {}; NV_TABS.forEach(function(t){ NV_SEEN[t] = keys[t]; });
-      nvSave();
-      return;
-    }
-    NV_SEEN = stored;
+    NV_NEW = {}; NV_PEND = {}; NV_SEEN = {};
     NV_TABS.forEach(function(tab){
-      NV_NEW[tab] = {};
-      if (!Array.isArray(stored[tab])) { NV_SEEN[tab] = keys[tab]; return; }
+      NV_NEW[tab] = {}; NV_PEND[tab] = {};
+      var all = items[tab].map(function(x){ return x[0]; });
+      if (!stored || typeof stored !== "object" || !Array.isArray(stored[tab])) { NV_SEEN[tab] = all; return; }
+      NV_SEEN[tab] = stored[tab].slice();
       var seen = {}; stored[tab].forEach(function(k){ seen[k] = true; });
-      keys[tab].forEach(function(k){ if (!seen[k]) NV_NEW[tab][k] = true; });
+      items[tab].forEach(function(x){ if (!seen[x[0]]) { NV_NEW[tab][x[0]] = true; NV_PEND[tab][x[0]] = x[1] || ""; } });
     });
     nvSave();
     nvBadges();
+    setTimeout(nvDecorateChips, 0);
     // Na úzkom mobile môže byť záložka s odznakom mimo obrazovky - jemne k nej posunieme lištu.
     setTimeout(function(){
       var first = null;
@@ -3580,26 +3632,26 @@
         bar.scrollTo({left: Math.max(0, r - bar.clientWidth + 24), behavior: "smooth"});
       }
     }, 1200);
-    // Aktuálne otvorená záložka sa ráta ako videná, ale odznak necháme chvíľu svietiť.
-    setTimeout(function(){ nvMarkViewed(currentTab); }, 6000);
   }
   function nvRerender(){
     if (fotoRendered){ fotoChipsEl.innerHTML = ""; buildFotoChips(); renderFoto(); }
     if (sklRendered){ sklChipsEl.innerHTML = ""; buildSklChips(); renderSkl(); }
     if (videoaiRendered){ videoaiChipsEl.innerHTML = ""; buildVideoaiChips(); renderVideoai(); }
     render();
+    nvDecorateChips();
   }
   var __origRefreshFromRemoteDataForNv = refreshFromRemoteData;
   refreshFromRemoteData = function(data){
     if (!NV_DONE && data && Array.isArray(data.PHOTOS) && Array.isArray(data.VIDEOS)) {
-      nvFinalize(nvKeysFrom(data.PHOTOS, data.SKL_PHOTOS, data.VIDEOS));
+      nvFinalize(nvItems(data.PHOTOS, data.SKL_PHOTOS, data.VIDEOS));
     }
     __origRefreshFromRemoteDataForNv(data);
+    nvDecorateChips();
   };
   // Offline / zlyhané stiahnutie dát: po chvíli vyhodnotíme podľa vstavaných dát.
   setTimeout(function(){
     if (NV_DONE) return;
-    nvFinalize(nvKeysFrom(PHOTOS, SKL_PHOTOS, VIDEOS));
+    nvFinalize(nvItems(PHOTOS, SKL_PHOTOS, VIDEOS));
     nvRerender();
   }, 9000);
   var __origCardHtmlForNv = cardHtml;
@@ -3608,10 +3660,24 @@
     var isNew = v.file ? newIs("videoai", v.file) : newIs("videos", v.id);
     return isNew ? h.replace('<span class="title">', '<span class="title"><span class="nv-pill">Nové</span>') : h;
   };
-  NV_TABS.forEach(function(tab){
-    var btn = TAB_BTN[tab];
-    if (btn) btn.addEventListener("click", function(){ nvMarkViewed(tab); });
-  });
+  // Po prestavaní čipov znova doplníme počty.
+  var __nvBF = buildFotoChips; buildFotoChips = function(){ __nvBF(); nvDecorateChips(); };
+  var __nvBS = buildSklChips; buildSklChips = function(){ __nvBS(); nvDecorateChips(); };
+  var __nvBV = buildVideoaiChips; buildVideoaiChips = function(){ __nvBV(); nvDecorateChips(); };
+  // Otvorenie konkrétneho videa/fotky = táto položka je videná.
+  var __nvOPF = openPlayerFile;
+  openPlayerFile = function(url, title, key){ if (key) nvSeeKeys("videoai", [key]); return __nvOPF.apply(this, arguments); };
+  var __nvOP = openPlayer;
+  openPlayer = function(id, title){ if (id) nvSeeKeys("videos", [id]); return __nvOP.apply(this, arguments); };
+  var __nvSLP = showLightboxPhoto;
+  showLightboxPhoto = function(){
+    var ph = currentPhotoList && currentPhotoList[currentPhotoIndex];
+    if (ph && NV_PEND) {
+      if (NV_PEND.foto && NV_PEND.foto.hasOwnProperty(ph.p)) nvSeeKeys("foto", [ph.p]);
+      else if (NV_PEND.sklarne && NV_PEND.sklarne.hasOwnProperty(ph.p)) nvSeeKeys("sklarne", [ph.p]);
+    }
+    return __nvSLP.apply(this, arguments);
+  };
 
   // ============ Vymazanie fotky z galérie (len admin) ============
   // Klientská appka nemá (a nesmie mať) Cloudinary/GitHub API secret potrebný na prepis
