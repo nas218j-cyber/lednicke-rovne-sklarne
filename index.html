@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lednické Rovne a sklárne</title>
+<meta name="description" content="Archív starých fotiek, videí a histórie obce Lednické Rovne a sklárne RONA – oživené fotografie, zamestnanci, výroba skla a pamätníci.">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#18130d">
 <link rel="icon" href="favicon.ico" sizes="any">
@@ -1240,13 +1241,14 @@
     <div class="legal"><a href="#" id="footer-privacy">Ochrana súkromia</a> · <a href="#" id="footer-cookies">Nastavenia cookies</a></div>
   </footer>
 
-  <div class="cookie-banner" id="cookie-banner" role="dialog" aria-live="polite" aria-label="Súhlas s cookies" hidden>
+  <div class="cookie-banner" id="cookie-banner" role="dialog" aria-live="polite" aria-label="Súhlas s cookies">
     <p>Stránka si v prehliadači pamätá tvoje nastavenia (téma, čo už si videl). So súhlasom zapisujeme aj <strong>štatistiku návštevnosti</strong> – približné mesto, skrátenú IP adresu, typ zariadenia a dĺžku návštevy. <a href="#" id="cookie-more">Viac informácií</a></p>
     <div class="cookie-btns">
       <button type="button" class="cookie-btn secondary" id="cookie-reject">Odmietnuť</button>
       <button type="button" class="cookie-btn" id="cookie-accept">Prijať</button>
     </div>
   </div>
+  <script>try{if(localStorage.getItem("sklolr-consent-v1"))document.getElementById("cookie-banner").hidden=true}catch(e){}</script>
 
   <div class="lb-admin-modal" id="privacy-modal" hidden>
     <div class="lb-admin-box privacy-box">
@@ -3369,7 +3371,7 @@
     if (fSet) fSet.addEventListener("click", function(e){ e.preventDefault(); consentShowBanner(true); });
     var c = consentGet();
     if (c === "yes") consentStartVisitLog();
-    else if (c !== "no") setTimeout(function(){ consentShowBanner(true); }, 600);
+    else if (c !== "no") consentShowBanner(true);
   }
   consentWire();
   // ============ Editovateľný popisok fotky (admin, zobrazený ako značka) ============
