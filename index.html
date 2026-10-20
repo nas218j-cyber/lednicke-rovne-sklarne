@@ -6,16 +6,41 @@
 <title>Lednické Rovne a sklárne</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#18130d">
-<link rel="apple-touch-icon" href="https://res.cloudinary.com/nryz9plw/image/upload/app-assets/apple-touch-icon.png">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LR a sklárne">
 <meta name="mobile-web-app-capable" content="yes">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://nas218j-cyber.github.io" crossorigin>
 <link rel="dns-prefetch" href="https://nas218j-cyber.github.io">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,440;9..144,560;9..144,650&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="preload" href="fonts/work-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/work-sans-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/playfair-display-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:'Fraunces';font-style:normal;font-weight:100 900;font-display:optional;src:url(fonts/fraunces-latin-opsz-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:'Fraunces';font-style:normal;font-weight:100 900;font-display:optional;src:url(fonts/fraunces-latin-ext-opsz-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:'Playfair Display';font-style:normal;font-weight:600;font-display:optional;src:url(fonts/playfair-display-latin-600-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:'Playfair Display';font-style:normal;font-weight:600;font-display:optional;src:url(fonts/playfair-display-latin-ext-600-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:'Playfair Display';font-style:normal;font-weight:700;font-display:optional;src:url(fonts/playfair-display-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:'Playfair Display';font-style:normal;font-weight:700;font-display:optional;src:url(fonts/playfair-display-latin-ext-700-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:'Playfair Display';font-style:italic;font-weight:600;font-display:optional;src:url(fonts/playfair-display-latin-600-italic.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:'Playfair Display';font-style:italic;font-weight:600;font-display:optional;src:url(fonts/playfair-display-latin-ext-600-italic.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:'Work Sans';font-style:normal;font-weight:400;font-display:optional;src:url(fonts/work-sans-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:'Work Sans';font-style:normal;font-weight:400;font-display:optional;src:url(fonts/work-sans-latin-ext-400-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:'Work Sans';font-style:normal;font-weight:500;font-display:optional;src:url(fonts/work-sans-latin-500-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:'Work Sans';font-style:normal;font-weight:500;font-display:optional;src:url(fonts/work-sans-latin-ext-500-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:'Work Sans';font-style:normal;font-weight:600;font-display:optional;src:url(fonts/work-sans-latin-600-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:'Work Sans';font-style:normal;font-weight:600;font-display:optional;src:url(fonts/work-sans-latin-ext-600-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:'Work Sans';font-style:normal;font-weight:700;font-display:optional;src:url(fonts/work-sans-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:'Work Sans';font-style:normal;font-weight:700;font-display:optional;src:url(fonts/work-sans-latin-ext-700-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:400;font-display:optional;src:url(fonts/jetbrains-mono-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:400;font-display:optional;src:url(fonts/jetbrains-mono-latin-ext-400-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:500;font-display:optional;src:url(fonts/jetbrains-mono-latin-500-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:500;font-display:optional;src:url(fonts/jetbrains-mono-latin-ext-500-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+</style>
 <style>
   :root{
     --bg:#18130d;
@@ -798,6 +823,26 @@
   }
   .lb-pin:hover .lb-pin-label, .lb-pin.active .lb-pin-label{ opacity:1; }
   .lb-pin:hover .lb-pin-dot, .lb-pin.active .lb-pin-dot{ opacity:1; }
+  .cookie-banner{
+    position:fixed; left:12px; right:12px; bottom:12px; z-index:9998;
+    max-width:560px; margin:0 auto; padding:14px 16px;
+    background:var(--surface); color:var(--text); border:1px solid var(--border);
+    border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.45);
+    font-family:"Work Sans", sans-serif; font-size:13.5px; line-height:1.45;
+  }
+  .cookie-banner[hidden]{display:none;}
+  .cookie-banner p{margin:0 0 10px;}
+  .cookie-banner a{color:var(--accent);}
+  .cookie-btns{display:flex; gap:8px; justify-content:flex-end;}
+  .cookie-btn{
+    border:none; border-radius:9px; padding:9px 18px; cursor:pointer;
+    background:var(--accent); color:#fff9f2; font-family:"Work Sans", sans-serif; font-weight:600; font-size:13.5px;
+  }
+  .cookie-btn.secondary{background:transparent; color:var(--text); border:1px solid var(--border);}
+  .lb-admin-box.privacy-box{width:520px; max-width:92vw; max-height:82vh; overflow:auto; text-align:left;}
+  .lb-admin-box.privacy-box p{font-size:13px; line-height:1.5; margin:0 0 10px; opacity:.92;}
+  footer .legal{font-size:12.5px; color:var(--text-faint);}
+  footer .legal a{color:var(--text-faint);}
   .lb-admin-modal{
     position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9999;
     display:flex; align-items:center; justify-content:center; padding:16px; box-sizing:border-box;
@@ -1192,7 +1237,28 @@
         <span id="visit-counter"></span>
       </div>
     </div>
+    <div class="legal"><a href="#" id="footer-privacy">Ochrana súkromia</a> · <a href="#" id="footer-cookies">Nastavenia cookies</a></div>
   </footer>
+
+  <div class="cookie-banner" id="cookie-banner" role="dialog" aria-live="polite" aria-label="Súhlas s cookies" hidden>
+    <p>Stránka si v prehliadači pamätá tvoje nastavenia (téma, čo už si videl). So súhlasom zapisujeme aj <strong>štatistiku návštevnosti</strong> – približné mesto, skrátenú IP adresu, typ zariadenia a dĺžku návštevy. <a href="#" id="cookie-more">Viac informácií</a></p>
+    <div class="cookie-btns">
+      <button type="button" class="cookie-btn secondary" id="cookie-reject">Odmietnuť</button>
+      <button type="button" class="cookie-btn" id="cookie-accept">Prijať</button>
+    </div>
+  </div>
+
+  <div class="lb-admin-modal" id="privacy-modal" hidden>
+    <div class="lb-admin-box privacy-box">
+      <h4>Ochrana súkromia a cookies</h4>
+      <p><strong>Nevyhnutné (vždy):</strong> v prehliadači (localStorage) si stránka ukladá zvolenú tému, ktoré fotky a videá už si videl (pre označenie „Nové“) a tvoju voľbu súhlasu. Tieto údaje neopúšťajú tvoje zariadenie. Anonymné počítadlo otvorení stránky zvyšuje len číslo, nič o tebe neukladá.</p>
+      <p><strong>Štatistika návštevnosti (len so súhlasom):</strong> krajina a približné mesto, skrátená IP adresa (posledná časť sa nikdy neuloží), typ zariadenia, dĺžka návštevy a otvorené sekcie. Krajinu, mesto a IP zisťuje služba ipwho.is, záznam sa ukladá v databáze Google Firebase. Prezerať si ho môže len správca stránky. Súhlas môžeš kedykoľvek zmeniť cez „Nastavenia cookies“ v pätičke.</p>
+      <p><strong>Tretie strany:</strong> fotky a videá sa načítavajú z GitHub Pages, YouTube videá sa prehrávajú cez youtube-nocookie.com (YouTube môže ukladať vlastné údaje až po spustení videa). Písma sú uložené priamo na tejto stránke.</p>
+      <p><strong>Pridané fotky:</strong> fotka a poznámka, ktoré pošleš cez „Pridať fotku“, sa uložia na schválenie správcom.</p>
+      <p>Správca stránky: Mirec Zachar (YouTube kanál @MMicro).</p>
+      <div class="row"><button type="button" id="privacy-close-btn">Zavrieť</button></div>
+    </div>
+  </div>
 
   <div class="photo-lightbox" id="photo-lightbox" hidden>
     <div class="lb-top"><div class="lb-tools"><button class="lb-tool" id="lb-zoom-out" type="button" aria-label="Oddialiť">−</button><button class="lb-tool" id="lb-zoom-in" type="button" aria-label="Priblížiť">+</button><button class="lb-tool" id="lb-share" type="button" aria-label="Zdieľať / uložiť fotku"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button><button class="lb-tool" id="lb-fullscreen" type="button" aria-label="Celá obrazovka" aria-pressed="false">⛶</button></div><button class="lb-close" id="lb-close" type="button" aria-label="Zavrieť">✕</button></div>
@@ -1496,7 +1562,7 @@
     vpVideo.load();
     vpVideo.hidden = true;
     vpIframe.hidden = false;
-    vpIframe.src = "https://www.youtube.com/embed/" + encodeURIComponent(id) + "?autoplay=1&playsinline=1&rel=0";
+    vpIframe.src = "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(id) + "?autoplay=1&playsinline=1&rel=0";
     vpExternal.hidden = false;
     vpExternal.href = "https://www.youtube.com/watch?v=" + encodeURIComponent(id);
     // YouTube video nemá u nás hostovaný súbor na zdieľanie (len vnorený iframe) —
@@ -3266,7 +3332,46 @@
 
   tagWireUI();
   tagWireAdminModal();
-  tagInit().then(function(){ visitCounterInit(); visitLogInit(); });
+  tagInit().then(function(){ visitCounterInit(); });
+  // ============ Súhlas s cookies / štatistikou návštevnosti ============
+  // Bez súhlasu sa NEZAPISUJE prehľad návštev (mesto, skrátená IP, zariadenie, dĺžka).
+  // Anonymné počítadlo otvorení a nevyhnutné nastavenia (téma, „Nové") bežia vždy.
+  var CONSENT_KEY = "sklolr-consent-v1";
+  function consentGet(){ try { return localStorage.getItem(CONSENT_KEY); } catch(e){ return null; } }
+  function consentSet(v){ try { localStorage.setItem(CONSENT_KEY, v); } catch(e){} }
+  var __consentVisitStarted = false;
+  function consentStartVisitLog(){
+    if (__consentVisitStarted) return;
+    __consentVisitStarted = true;
+    tagInit().then(function(){ visitLogInit(); });
+  }
+  function consentShowBanner(show){
+    var b = document.getElementById("cookie-banner");
+    if (b) b.hidden = !show;
+  }
+  function consentChoose(v){
+    consentSet(v);
+    consentShowBanner(false);
+    if (v === "yes") consentStartVisitLog();
+  }
+  function consentWire(){
+    var acc = document.getElementById("cookie-accept"), rej = document.getElementById("cookie-reject");
+    var more = document.getElementById("cookie-more"), pm = document.getElementById("privacy-modal");
+    var pmClose = document.getElementById("privacy-close-btn");
+    var fPriv = document.getElementById("footer-privacy"), fSet = document.getElementById("footer-cookies");
+    if (acc) acc.addEventListener("click", function(){ consentChoose("yes"); });
+    if (rej) rej.addEventListener("click", function(){ consentChoose("no"); });
+    function openPriv(e){ if (e) e.preventDefault(); if (pm) pm.hidden = false; }
+    if (more) more.addEventListener("click", openPriv);
+    if (fPriv) fPriv.addEventListener("click", openPriv);
+    if (pmClose) pmClose.addEventListener("click", function(){ pm.hidden = true; });
+    if (pm) pm.addEventListener("click", function(e){ if (e.target === pm) pm.hidden = true; });
+    if (fSet) fSet.addEventListener("click", function(e){ e.preventDefault(); consentShowBanner(true); });
+    var c = consentGet();
+    if (c === "yes") consentStartVisitLog();
+    else if (c !== "no") setTimeout(function(){ consentShowBanner(true); }, 600);
+  }
+  consentWire();
   // ============ Editovateľný popisok fotky (admin, zobrazený ako značka) ============
   var capCache = {};
   var capReady = null;

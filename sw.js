@@ -1,4 +1,4 @@
-const CACHE = "sklo-lr-v4";
+const CACHE = "sklo-lr-v5";
 const PHOTO_CACHE = "sklo-lr-photos-v1";
 const PHOTO_CACHE_MAX = 400; // strop na počet uložených fotiek (thumb + plná verzia)
 const ASSETS = ["./", "./index.html", "./manifest.json"];
@@ -58,6 +58,20 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (url.origin !== self.location.origin) return; // never intercept YouTube/external links
+
+  // Písma a ikony (nemenia sa) - cache-first, aby sa nesťahovali pri každej návšteve
+  // a písma boli k dispozícii okamžite (font-display: optional => žiadne skákanie stránky).
+  if (url.pathname.indexOf("/fonts/") !== -1 || url.pathname.indexOf("/icons/") !== -1 || url.pathname.endsWith("/favicon.ico")) {
+    event.respondWith(
+      caches.open(CACHE).then((cache) =>
+        cache.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
+          if (response && response.ok) cache.put(event.request, response.clone());
+          return response;
+        }))
+      )
+    );
+    return;
+  }
 
   // Vlastné súbory appky (index.html a pod.): najprv skús sieť a to skutočne
   // vždy najnovšiu verziu (cache: "reload" obchádza aj bežnú HTTP cache
