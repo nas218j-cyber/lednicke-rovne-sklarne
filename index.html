@@ -1910,6 +1910,7 @@
     var fromEl = TAB_VIEW[currentTab];
     var toEl = TAB_VIEW[which];
     currentTab = which;
+    saveTabState(which);
 
     TAB_ORDER.forEach(function(t){
       TAB_BTN[t].setAttribute("aria-selected", t === which ? "true" : "false");
@@ -1958,6 +1959,58 @@
     }
     fromEl.addEventListener("animationend", crossFade);
     setTimeout(crossFade, 360);
+  }
+
+  // --- Zapamätanie záložky a pozície pri odchode na externý odkaz ---
+  // V Messengeri/Facebooku sa odkaz často otvorí v tom istom okne a po návrate "späť"
+  // sa stránka načíta odznova (na predvolenej záložke Foto). Preto si aktuálnu záložku
+  // držíme v adrese (#historia) aj v sessionStorage a pozíciu scrollu ukladáme pri odchode.
+  var TAB_HASH = {videos:"videa", videoai:"ozivene-foto", history:"historia", foto:"foto", sklarne:"sklaren"};
+  function tabFromHash(){
+    var h = (location.hash || "").replace(/^#/, "");
+    for (var k in TAB_HASH) if (TAB_HASH[k] === h) return k;
+    return null;
+  }
+  function saveTabState(which){
+    try { sessionStorage.setItem("lr-tab", which); } catch(e){}
+    try { history.replaceState(history.state, "", "#" + TAB_HASH[which]); } catch(e){}
+  }
+  function saveScrollState(){
+    try { sessionStorage.setItem("lr-scroll", JSON.stringify({tab: currentTab, y: window.scrollY || 0})); } catch(e){}
+  }
+  window.addEventListener("pagehide", saveScrollState);
+  document.addEventListener("visibilitychange", function(){ if (document.hidden) saveScrollState(); });
+  // Pri kliknutí na externý odkaz uložíme stav hneď (webview v Messengeri nemusí poslať pagehide).
+  document.addEventListener("click", function(e){
+    var a = e.target && e.target.closest ? e.target.closest("a[href^='http']") : null;
+    if (a) saveScrollState();
+  }, true);
+
+  function restoreTabState(){
+    var saved = null, scroll = null;
+    try { saved = sessionStorage.getItem("lr-tab"); } catch(e){}
+    try { scroll = JSON.parse(sessionStorage.getItem("lr-scroll") || "null"); } catch(e){}
+    var target = tabFromHash() || (TAB_VIEW[saved] ? saved : null);
+    if (target && target !== currentTab) {
+      var rm = reduceMotion;
+      reduceMotion = true;   // bez animácie — hneď zobraziť správnu záložku
+      showTab(target);
+      reduceMotion = rm;
+    }
+    // Zobraziť aktívnu záložku aj v posuvnom páse záložiek.
+    var btn = TAB_BTN[currentTab], bar = btn && btn.parentNode;
+    if (bar && bar.scrollWidth > bar.clientWidth) {
+      bar.scrollLeft = btn.offsetLeft - (bar.clientWidth - btn.offsetWidth) / 2;
+    }
+    if (scroll && scroll.tab === currentTab && scroll.y > 0) {
+      try { history.scrollRestoration = "manual"; } catch(e){}
+      var y = scroll.y, tries = 0;
+      (function go(){
+        window.scrollTo(0, y);
+        // obsah sa môže ešte dokresľovať (obrázky, fonty) — skúsime niekoľkokrát
+        if (Math.abs((window.scrollY || 0) - y) > 4 && ++tries < 20) setTimeout(go, 100);
+      })();
+    }
   }
 
   function goToTab(which){
@@ -2702,6 +2755,9 @@
   // (inak by sa galéria zostavila až pri prvom kliknutí na záložku Foto).
   if (currentTab === "foto") ensureFotoRendered();
   if (currentTab === "sklarne") ensureSklRendered();
+  restoreTabState();
+  // Návrat z bfcache (stránka sa nenačítala znova) — len obnoviť záložku podľa adresy.
+  window.addEventListener("pageshow", function(e){ if (e.persisted) restoreTabState(); });
 
   // --- Globálne vyhľadávanie: jedno políčko hore hľadá naraz vo Videách, Foto aj Skláreň,
   // nech je v ktorejkoľvek záložke práve otvorenej. Kým je vyplnené, nahradí obsah aktuálnej
