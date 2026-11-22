@@ -2462,10 +2462,27 @@
       .catch(function(){ /* offline alebo chyba sťahovania – appka ostáva na vstavaných dátach */ });
   })();
 
+  // Veľká fotka v prehliadači: pri chybe skúsi znova (max 3×), posledný pokus priamo z GitHubu
+  // (raw) — čerstvo pridaná fotka tam je hneď, GitHub Pages sa aktualizuje s oneskorením.
+  var lbImgLoadSeq = 0;
+  function lbLoadImg(url){
+    var seq = ++lbImgLoadSeq, attempt = 0;
+    function start(){
+      if (seq !== lbImgLoadSeq) return;
+      lbImg.onerror = function(){
+        if (seq !== lbImgLoadSeq) return;
+        attempt++;
+        if (attempt <= 3) setTimeout(start, attempt * 700);
+      };
+      lbImg.src = attempt === 0 ? url : attempt === 3 ? jsDelivrToRawFallback(url) : url + "?r=" + attempt;
+    }
+    start();
+  }
+
   function showLightboxPhoto(){
     var ph = currentPhotoList[currentPhotoIndex];
     if (!ph) return;
-    lbImg.src = photoFull(ph.p);
+    lbLoadImg(photoFull(ph.p));
     lbImg.alt = ph.c || fotoCatLabel(ph.cat);
     lbCat.textContent = fotoCatLabel(ph.cat);
     lbText.textContent = ph.c || "";
@@ -3355,22 +3372,37 @@
     if (!pid) return false;
     var list = tagsCache[pid];
     if (!list || !list.length) return false;
-    var q = query.toLowerCase();
+    var q = foldSk(query);
     for (var i=0;i<list.length;i++){
-      if (list[i].name.toLowerCase().indexOf(q) !== -1) return true;
+      if (foldSk(list[i].name).indexOf(q) !== -1) return true;
     }
     return false;
+  }
+  // Upravený popisok (✎ admin, Firestore 'captions') — hľadá sa aj v ňom, nielen v pôvodnom.
+  function capQueryMatches(ph, query){
+    if (!query || !ph || !ph.p) return false;
+    if (typeof capCache === 'undefined' || !capCache || !capCache.hasOwnProperty(ph.p)) return false;
+    var t = capCache[ph.p];
+    return !!t && foldSk(t).indexOf(foldSk(query)) !== -1;
   }
   var __origFotoMatchesQueryForTags = fotoMatchesQuery;
   fotoMatchesQuery = function(ph, query){
     if (__origFotoMatchesQueryForTags(ph, query)) return true;
-    return tagQueryMatches(ph, query);
+    return tagQueryMatches(ph, query) || capQueryMatches(ph, query);
   };
   var __origSklMatchesQueryForTags = sklMatchesQuery;
   sklMatchesQuery = function(ph, query){
     if (__origSklMatchesQueryForTags(ph, query)) return true;
-    return tagQueryMatches(ph, query);
+    return tagQueryMatches(ph, query) || capQueryMatches(ph, query);
   };
+  // Po načítaní označení a upravených popiskov prekresliť práve otvorené vyhľadávanie.
+  function searchRefreshAfterExtras(){
+    try {
+      if (globalSearchActive) renderGlobalSearch();
+      if (fotoQEl && fotoQEl.value.trim()) renderFoto();
+      if (sklQEl && sklQEl.value.trim()) renderSkl();
+    } catch (e) {}
+  }
 
   
   // ---- Pocitadlo navstevnosti stranky (Firestore, kolekcia 'stats', dokument 'visits') ----
@@ -3392,7 +3424,11 @@
 
   tagWireUI();
   tagWireAdminModal();
-  tagInit().then(function(){ visitCounterInit(); });
+  tagInit().then(function(){
+    visitCounterInit();
+    searchRefreshAfterExtras();
+    capInit().then(searchRefreshAfterExtras);
+  });
   // ============ Súhlas s cookies / štatistikou návštevnosti ============
   // Bez súhlasu sa NEZAPISUJE prehľad návštev (mesto, skrátená IP, zariadenie, dĺžka).
   // Anonymné počítadlo otvorení a nevyhnutné nastavenia (téma, „Nové") bežia vždy.
